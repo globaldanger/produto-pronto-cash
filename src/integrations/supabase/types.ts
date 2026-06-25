@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string
+          expense_date: string
+          id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          expense_date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
@@ -147,6 +183,7 @@ export type Database = {
         Row: {
           active: boolean
           category_id: string | null
+          cost_price: number | null
           created_at: string
           description: string | null
           featured: boolean
@@ -161,6 +198,7 @@ export type Database = {
         Insert: {
           active?: boolean
           category_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string | null
           featured?: boolean
@@ -175,6 +213,7 @@ export type Database = {
         Update: {
           active?: boolean
           category_id?: string | null
+          cost_price?: number | null
           created_at?: string
           description?: string | null
           featured?: boolean
@@ -216,6 +255,78 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_settings: {
+        Row: {
+          about_stat1_label: string | null
+          about_stat1_number: string | null
+          about_stat2_label: string | null
+          about_stat2_number: string | null
+          about_stat3_label: string | null
+          about_stat3_number: string | null
+          about_stat4_label: string | null
+          about_stat4_number: string | null
+          about_text1: string | null
+          about_text2: string | null
+          id: string
+          store_address: string | null
+          store_email: string | null
+          store_hours: string | null
+          store_logo: string | null
+          store_name: string
+          store_phone: string | null
+          store_slogan: string | null
+          store_whatsapp: string | null
+          support_image: string | null
+          updated_at: string
+        }
+        Insert: {
+          about_stat1_label?: string | null
+          about_stat1_number?: string | null
+          about_stat2_label?: string | null
+          about_stat2_number?: string | null
+          about_stat3_label?: string | null
+          about_stat3_number?: string | null
+          about_stat4_label?: string | null
+          about_stat4_number?: string | null
+          about_text1?: string | null
+          about_text2?: string | null
+          id?: string
+          store_address?: string | null
+          store_email?: string | null
+          store_hours?: string | null
+          store_logo?: string | null
+          store_name?: string
+          store_phone?: string | null
+          store_slogan?: string | null
+          store_whatsapp?: string | null
+          support_image?: string | null
+          updated_at?: string
+        }
+        Update: {
+          about_stat1_label?: string | null
+          about_stat1_number?: string | null
+          about_stat2_label?: string | null
+          about_stat2_number?: string | null
+          about_stat3_label?: string | null
+          about_stat3_number?: string | null
+          about_stat4_label?: string | null
+          about_stat4_number?: string | null
+          about_text1?: string | null
+          about_text2?: string | null
+          id?: string
+          store_address?: string | null
+          store_email?: string | null
+          store_hours?: string | null
+          store_logo?: string | null
+          store_name?: string
+          store_phone?: string | null
+          store_slogan?: string | null
+          store_whatsapp?: string | null
+          support_image?: string | null
           updated_at?: string
         }
         Relationships: []
