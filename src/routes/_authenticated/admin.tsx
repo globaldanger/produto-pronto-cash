@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
-const NAV = [
+const NAV: { to: string; icon: string; label: string; exact?: boolean }[] = [
   { to: "/admin", icon: "fa-tachometer-alt", label: "Dashboard", exact: true },
   { to: "/admin/sales", icon: "fa-dollar-sign", label: "Vendas" },
   { to: "/admin/products", icon: "fa-box", label: "Produtos" },
@@ -21,7 +21,7 @@ const NAV = [
   { to: "/admin/finance", icon: "fa-chart-line", label: "Financeiro" },
   { to: "/admin/about", icon: "fa-circle-info", label: "Sobre" },
   { to: "/admin/settings", icon: "fa-cog", label: "Configurações" },
-] as const;
+];
 
 function AdminLayout() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
