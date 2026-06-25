@@ -21,7 +21,6 @@ type Product = {
   images: string[];
   active: boolean;
   featured: boolean;
-  sku: string | null;
 };
 
 const empty: Omit<Product, "id"> = {
@@ -35,7 +34,6 @@ const empty: Omit<Product, "id"> = {
   images: [],
   active: true,
   featured: false,
-  sku: null,
 };
 
 function ProductsPage() {
@@ -132,7 +130,6 @@ function ProductsPage() {
                       </div>
                       <div>
                         <div className="font-semibold">{p.name}</div>
-                        {p.sku && <div className="text-xs text-muted-foreground">SKU: {p.sku}</div>}
                       </div>
                     </div>
                   </td>

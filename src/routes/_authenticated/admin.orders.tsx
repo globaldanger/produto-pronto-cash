@@ -11,15 +11,14 @@ export const Route = createFileRoute("/_authenticated/admin/orders")({
 type Order = {
   id: string;
   customer_name: string | null;
-  customer_email: string | null;
   customer_phone: string | null;
   total: number;
-  status: string;
-  payment_method: string | null;
+  status: "pending" | "paid" | "shipped" | "delivered" | "cancelled";
   created_at: string;
 };
 
-const STATUS = ["pending", "paid", "shipped", "delivered", "cancelled"];
+const STATUS = ["pending", "paid", "shipped", "delivered", "cancelled"] as const;
+type Status = (typeof STATUS)[number];
 const LABEL: Record<string, string> = {
   pending: "Pendente",
   paid: "Pago",
@@ -40,14 +39,14 @@ function OrdersPage() {
     queryKey: ["admin", "orders", filter],
     queryFn: async () => {
       let q = supabase.from("orders").select("*").order("created_at", { ascending: false });
-      if (filter !== "all") q = q.eq("status", filter);
+      if (filter !== "all") q = q.eq("status", filter as Status);
       const { data, error } = await q;
       if (error) throw error;
-      return data as Order[];
+      return data as unknown as Order[];
     },
   });
 
-  async function updateStatus(id: string, status: string) {
+  async function updateStatus(id: string, status: Status) {
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Status atualizado");
@@ -98,14 +97,14 @@ function OrdersPage() {
                   <td className="px-4 py-3 font-mono text-xs">{o.id.slice(0, 8)}</td>
                   <td className="px-4 py-3">
                     <div className="font-semibold">{o.customer_name ?? "—"}</div>
-                    <div className="text-xs text-muted-foreground">{o.customer_email ?? o.customer_phone}</div>
+                    <div className="text-xs text-muted-foreground">{o.customer_phone ?? ""}</div>
                   </td>
                   <td className="px-4 py-3 text-right font-bold">{fmtBRL(Number(o.total))}</td>
-                  <td className="px-4 py-3 text-center text-xs">{o.payment_method ?? "—"}</td>
+                  <td className="px-4 py-3 text-center text-xs">Pix</td>
                   <td className="px-4 py-3 text-center">
                     <select
                       value={o.status}
-                      onChange={(e) => updateStatus(o.id, e.target.value)}
+                      onChange={(e) => updateStatus(o.id, e.target.value as Status)}
                       className="rounded-md border border-border bg-background px-2 py-1 text-xs"
                     >
                       {STATUS.map((s) => (

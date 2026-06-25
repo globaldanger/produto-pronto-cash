@@ -168,11 +168,12 @@ function ExpenseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =
       return;
     }
     const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return toast.error("Sessão expirada");
     const { error } = await supabase.from("expenses").insert({
       ...form,
       amount: Number(form.amount),
       category: form.category || null,
-      user_id: u.user?.id,
+      user_id: u.user.id,
     });
     if (error) return toast.error(error.message);
     toast.success("Despesa adicionada");

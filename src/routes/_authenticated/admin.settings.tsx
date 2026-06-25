@@ -10,14 +10,14 @@ export const Route = createFileRoute("/_authenticated/admin/settings")({
 
 type Settings = {
   id: string;
-  store_name: string | null;
-  store_phone: string | null;
-  store_email: string | null;
-  store_address: string | null;
-  store_whatsapp: string | null;
-  store_instagram: string | null;
-  pix_key: string | null;
-  mercadopago_access_token: string | null;
+  store_name: string;
+  store_phone: string;
+  store_email: string;
+  store_address: string;
+  store_whatsapp: string;
+  store_instagram: string;
+  pix_key: string;
+  mercadopago_access_token: string;
 };
 
 function SettingsPage() {
@@ -26,7 +26,19 @@ function SettingsPage() {
     queryKey: ["settings"],
     queryFn: async () => {
       const { data } = await supabase.from("store_settings").select("*").limit(1).maybeSingle();
-      return data as Settings | null;
+      if (!data) return null;
+      const norm: Settings = {
+        id: data.id,
+        store_name: data.store_name ?? "",
+        store_phone: data.store_phone ?? "",
+        store_email: data.store_email ?? "",
+        store_address: data.store_address ?? "",
+        store_whatsapp: data.store_whatsapp ?? "",
+        store_instagram: data.store_instagram ?? "",
+        pix_key: data.pix_key ?? "",
+        mercadopago_access_token: data.mercadopago_access_token ?? "",
+      };
+      return norm;
     },
   });
 
