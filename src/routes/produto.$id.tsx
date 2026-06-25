@@ -1,6 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/stores/cart";
+import { StoreHeader } from "@/components/StoreHeader";
+import { CartDrawer } from "@/components/CartDrawer";
 
 export const Route = createFileRoute("/produto/$id")({
   head: () => ({ meta: [{ title: "Produto — SmartCell" }] }),
@@ -40,6 +44,8 @@ function ProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(0);
+  const [qty, setQty] = useState(1);
+  const add = useCart((s) => s.add);
 
   useEffect(() => {
     (async () => {
@@ -63,14 +69,7 @@ function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-surface">
-        <div className="container mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-          <Link to="/" className="flex items-center gap-3">
-            <i className="fa-solid fa-mobile-screen text-2xl text-primary" />
-            <span className="text-xl font-bold">SmartCell</span>
-          </Link>
-        </div>
-      </header>
+      <StoreHeader />
       <main className="container mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-2">
         <div>
           <div className="aspect-square overflow-hidden rounded-xl border border-border bg-card">
@@ -116,18 +115,36 @@ function ProductPage() {
               {product.description}
             </p>
           )}
+          {product.stock > 0 && (
+            <div className="mt-8 flex items-center gap-3">
+              <label className="text-sm font-medium">Quantidade:</label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  className="h-9 w-9 rounded border border-border hover:border-primary"
+                >−</button>
+                <span className="w-10 text-center font-semibold">{qty}</span>
+                <button
+                  onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
+                  className="h-9 w-9 rounded border border-border hover:border-primary"
+                >+</button>
+              </div>
+            </div>
+          )}
           <button
             disabled={product.stock <= 0}
-            className="mt-8 w-full rounded-lg bg-primary py-4 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            onClick={() => {
+              add({ productId: product.id, name: product.name, image: product.images[0] ?? null, price, stock: product.stock }, qty);
+              toast.success(`${qty}× adicionado ao carrinho`);
+            }}
+            className="mt-4 w-full rounded-lg bg-primary py-4 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             <i className="fa-solid fa-cart-shopping mr-2" />
-            Adicionar ao carrinho
+            {product.stock <= 0 ? "Esgotado" : "Adicionar ao carrinho"}
           </button>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            Carrinho e checkout via Pix chegam na próxima etapa.
-          </p>
         </div>
       </main>
+      <CartDrawer />
     </div>
   );
 }

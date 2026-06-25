@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const NAV: { to: string; icon: string; label: string; exact?: boolean }[] = [
   { to: "/admin", icon: "fa-tachometer-alt", label: "Dashboard", exact: true },
+  { to: "/admin/pdv", icon: "fa-cash-register", label: "PDV (Balcão)" },
   { to: "/admin/sales", icon: "fa-dollar-sign", label: "Vendas" },
   { to: "/admin/products", icon: "fa-box", label: "Produtos" },
   { to: "/admin/categories", icon: "fa-tags", label: "Categorias" },

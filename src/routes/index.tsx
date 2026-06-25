@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useCart } from "@/stores/cart";
+import { StoreHeader } from "@/components/StoreHeader";
+import { CartDrawer } from "@/components/CartDrawer";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,13 +33,6 @@ type Product = {
 };
 
 function Index() {
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) =>
-      setUser(data.user ? { id: data.user.id, email: data.user.email ?? undefined } : null),
-    );
-  }, []);
-
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -64,53 +60,30 @@ function Index() {
 
   const featured = products.filter((p) => p.featured).slice(0, 6);
 
+  const { data: about } = useQuery({
+    queryKey: ["store_about_public"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("store_settings")
+        .select("store_name,store_slogan,about_text1,about_text2,about_hero_image,about_gallery,store_address,store_phone,store_whatsapp,store_hours,store_instagram")
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b-2 border-primary/60 bg-gradient-to-br from-background to-surface backdrop-blur-xl">
-        <div className="container mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-          <Link to="/" className="flex items-center gap-3">
-            <i className="fa-solid fa-mobile-screen text-3xl text-primary" />
-            <span className="bg-gradient-to-r from-primary to-yellow-300 bg-clip-text text-2xl font-extrabold text-transparent">
-              SmartCell
-            </span>
-          </Link>
-          <nav className="flex items-center gap-4 text-sm">
-            {user ? (
-              <>
-                <Link to="/admin" className="hidden text-muted-foreground hover:text-primary sm:inline">
-                  Painel
-                </Link>
-                <button
-                  onClick={async () => {
-                    await supabase.auth.signOut();
-                  }}
-                  className="rounded-md border border-border px-3 py-2 text-sm hover:border-primary hover:text-primary"
-                >
-                  Sair
-                </button>
-              </>
-            ) : (
-              <Link
-                to="/auth"
-                className="rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                Entrar
-              </Link>
-            )}
-          </nav>
-        </div>
-      </header>
+      <StoreHeader />
 
       {/* Hero */}
       <section className="border-b border-border bg-gradient-to-br from-surface to-background py-16">
         <div className="container mx-auto max-w-7xl px-4 text-center">
           <h1 className="text-4xl font-extrabold leading-tight md:text-6xl">
-            Tudo para o seu <span className="text-primary">celular</span>
+            {about?.store_name ?? "SmartCell"}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground md:text-lg">
-            Capas, películas, carregadores, fones e muito mais. Pagamento via Pix com
-            confirmação instantânea.
+            {about?.store_slogan ?? "Capas, películas, carregadores, fones e muito mais. Pagamento via Pix com confirmação instantânea."}
           </p>
         </div>
       </section>
@@ -156,46 +129,83 @@ function Index() {
         )}
       </section>
 
-      <footer className="mt-12 border-t border-border bg-surface py-8 text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} SmartCell. Todos os direitos reservados.</p>
+      {/* Sobre a loja */}
+      {(about?.about_text1 || about?.about_text2 || about?.about_hero_image || (about?.about_gallery?.length ?? 0) > 0) && (
+        <section className="border-t border-border bg-surface py-16">
+          <div className="container mx-auto max-w-6xl px-4">
+            <h2 className="mb-8 text-center text-3xl font-bold">
+              Sobre a <span className="text-primary">nossa loja</span>
+            </h2>
+            <div className="grid gap-8 md:grid-cols-2 md:items-center">
+              {about?.about_hero_image && (
+                <img
+                  src={about.about_hero_image}
+                  alt="Nossa loja"
+                  className="aspect-video w-full rounded-xl object-cover"
+                />
+              )}
+              <div className="space-y-4 text-muted-foreground">
+                {about?.about_text1 && <p className="whitespace-pre-line text-base leading-relaxed">{about.about_text1}</p>}
+                {about?.about_text2 && <p className="whitespace-pre-line text-base leading-relaxed">{about.about_text2}</p>}
+              </div>
+            </div>
+            {(about?.about_gallery?.length ?? 0) > 0 && (
+              <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {about!.about_gallery!.map((url) => (
+                  <img key={url} src={url} alt="" className="aspect-square w-full rounded-lg object-cover" />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <footer className="border-t border-border bg-background py-8 text-center text-sm text-muted-foreground">
+        {about?.store_address && <p className="mb-1">{about.store_address}</p>}
+        {about?.store_phone && <p className="mb-1">Tel: {about.store_phone}{about.store_hours ? ` • ${about.store_hours}` : ""}</p>}
+        <p>© {new Date().getFullYear()} {about?.store_name ?? "SmartCell"}. Todos os direitos reservados.</p>
       </footer>
+      <CartDrawer />
     </div>
   );
 }
 
 function ProductCard({ product }: { product: Product }) {
+  const add = useCart((s) => s.add);
   const cover = product.images?.[0];
   const price = product.sale_price ?? product.price;
   return (
-    <Link
-      to="/produto/$id"
-      params={{ id: product.id }}
-      className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-primary"
-    >
-      <div className="aspect-square overflow-hidden bg-surface">
-        {cover ? (
-          <img
-            src={cover}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            <i className="fa-solid fa-image text-4xl" />
-          </div>
-        )}
-      </div>
-      <div className="p-3">
-        <h3 className="line-clamp-2 text-sm font-semibold">{product.name}</h3>
-        <div className="mt-2 flex items-baseline gap-2">
-          {product.sale_price && (
-            <span className="text-xs text-muted-foreground line-through">
-              R$ {product.price.toFixed(2)}
-            </span>
+    <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-primary">
+      <Link to="/produto/$id" params={{ id: product.id }} className="block">
+        <div className="aspect-square overflow-hidden bg-surface">
+          {cover ? (
+            <img src={cover} alt={product.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-muted-foreground">
+              <i className="fa-solid fa-image text-4xl" />
+            </div>
           )}
-          <span className="text-lg font-bold text-primary">R$ {price.toFixed(2)}</span>
         </div>
-      </div>
-    </Link>
+        <div className="p-3">
+          <h3 className="line-clamp-2 text-sm font-semibold">{product.name}</h3>
+          <div className="mt-2 flex items-baseline gap-2">
+            {product.sale_price && (
+              <span className="text-xs text-muted-foreground line-through">R$ {product.price.toFixed(2)}</span>
+            )}
+            <span className="text-lg font-bold text-primary">R$ {price.toFixed(2)}</span>
+          </div>
+        </div>
+      </Link>
+      <button
+        disabled={product.stock <= 0}
+        onClick={() => {
+          add({ productId: product.id, name: product.name, image: cover ?? null, price, stock: product.stock });
+          toast.success("Adicionado ao carrinho");
+        }}
+        className="m-3 mt-0 rounded-md bg-primary py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+      >
+        <i className="fa-solid fa-cart-plus mr-1" /> {product.stock <= 0 ? "Esgotado" : "Adicionar"}
+      </button>
+    </div>
   );
 }
