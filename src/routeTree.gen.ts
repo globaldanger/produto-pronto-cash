@@ -9,20 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MeusPedidosRouteImport } from './routes/meus-pedidos'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutoIdRouteImport } from './routes/produto.$id'
+import { Route as MeusPedidosIdRouteImport } from './routes/meus-pedidos.$id'
+import { Route as ComprovanteIdRouteImport } from './routes/comprovante.$id'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as CheckoutSucessoIdRouteImport } from './routes/checkout.sucesso.$id'
+import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminSalesRouteImport } from './routes/_authenticated/admin.sales'
 import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authenticated/admin.products'
+import { Route as AuthenticatedAdminPdvRouteImport } from './routes/_authenticated/admin.pdv'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminFinanceRouteImport } from './routes/_authenticated/admin.finance'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminAboutRouteImport } from './routes/_authenticated/admin.about'
 
+const MeusPedidosRoute = MeusPedidosRouteImport.update({
+  id: '/meus-pedidos',
+  path: '/meus-pedidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -42,6 +59,16 @@ const ProdutoIdRoute = ProdutoIdRouteImport.update({
   path: '/produto/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeusPedidosIdRoute = MeusPedidosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MeusPedidosRoute,
+} as any)
+const ComprovanteIdRoute = ComprovanteIdRouteImport.update({
+  id: '/comprovante/$id',
+  path: '/comprovante/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -51,6 +78,16 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const CheckoutSucessoIdRoute = CheckoutSucessoIdRouteImport.update({
+  id: '/sucesso/$id',
+  path: '/sucesso/$id',
+  getParentRoute: () => CheckoutRoute,
+} as any)
+const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
+  id: '/api/public/mp-webhook',
+  path: '/api/public/mp-webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
@@ -69,6 +106,11 @@ const AuthenticatedAdminProductsRoute =
     path: '/products',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPdvRoute = AuthenticatedAdminPdvRouteImport.update({
+  id: '/pdv',
+  path: '/pdv',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminOrdersRoute =
   AuthenticatedAdminOrdersRouteImport.update({
     id: '/orders',
@@ -96,28 +138,42 @@ const AuthenticatedAdminAboutRoute = AuthenticatedAdminAboutRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/checkout': typeof CheckoutRouteWithChildren
+  '/meus-pedidos': typeof MeusPedidosRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/comprovante/$id': typeof ComprovanteIdRoute
+  '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/checkout/sucesso/$id': typeof CheckoutSucessoIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/checkout': typeof CheckoutRouteWithChildren
+  '/meus-pedidos': typeof MeusPedidosRouteWithChildren
+  '/comprovante/$id': typeof ComprovanteIdRoute
+  '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/checkout/sucesso/$id': typeof CheckoutSucessoIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -125,15 +181,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/checkout': typeof CheckoutRouteWithChildren
+  '/meus-pedidos': typeof MeusPedidosRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/comprovante/$id': typeof ComprovanteIdRoute
+  '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/_authenticated/admin/about': typeof AuthenticatedAdminAboutRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/_authenticated/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/_authenticated/admin/products': typeof AuthenticatedAdminProductsRoute
   '/_authenticated/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
+  '/checkout/sucesso/$id': typeof CheckoutSucessoIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -141,43 +204,64 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/checkout'
+    | '/meus-pedidos'
     | '/admin'
+    | '/comprovante/$id'
+    | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
     | '/admin/categories'
     | '/admin/finance'
     | '/admin/orders'
+    | '/admin/pdv'
     | '/admin/products'
     | '/admin/sales'
     | '/admin/settings'
+    | '/api/public/mp-webhook'
+    | '/checkout/sucesso/$id'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/checkout'
+    | '/meus-pedidos'
+    | '/comprovante/$id'
+    | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
     | '/admin/categories'
     | '/admin/finance'
     | '/admin/orders'
+    | '/admin/pdv'
     | '/admin/products'
     | '/admin/sales'
     | '/admin/settings'
+    | '/api/public/mp-webhook'
+    | '/checkout/sucesso/$id'
     | '/admin'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/checkout'
+    | '/meus-pedidos'
     | '/_authenticated/admin'
+    | '/comprovante/$id'
+    | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/_authenticated/admin/about'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/finance'
     | '/_authenticated/admin/orders'
+    | '/_authenticated/admin/pdv'
     | '/_authenticated/admin/products'
     | '/_authenticated/admin/sales'
     | '/_authenticated/admin/settings'
+    | '/api/public/mp-webhook'
+    | '/checkout/sucesso/$id'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -185,11 +269,29 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CheckoutRoute: typeof CheckoutRouteWithChildren
+  MeusPedidosRoute: typeof MeusPedidosRouteWithChildren
+  ComprovanteIdRoute: typeof ComprovanteIdRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
+  ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/meus-pedidos': {
+      id: '/meus-pedidos'
+      path: '/meus-pedidos'
+      fullPath: '/meus-pedidos'
+      preLoaderRoute: typeof MeusPedidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -218,6 +320,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdutoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/meus-pedidos/$id': {
+      id: '/meus-pedidos/$id'
+      path: '/$id'
+      fullPath: '/meus-pedidos/$id'
+      preLoaderRoute: typeof MeusPedidosIdRouteImport
+      parentRoute: typeof MeusPedidosRoute
+    }
+    '/comprovante/$id': {
+      id: '/comprovante/$id'
+      path: '/comprovante/$id'
+      fullPath: '/comprovante/$id'
+      preLoaderRoute: typeof ComprovanteIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -231,6 +347,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/checkout/sucesso/$id': {
+      id: '/checkout/sucesso/$id'
+      path: '/sucesso/$id'
+      fullPath: '/checkout/sucesso/$id'
+      preLoaderRoute: typeof CheckoutSucessoIdRouteImport
+      parentRoute: typeof CheckoutRoute
+    }
+    '/api/public/mp-webhook': {
+      id: '/api/public/mp-webhook'
+      path: '/api/public/mp-webhook'
+      fullPath: '/api/public/mp-webhook'
+      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
@@ -251,6 +381,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/admin/products'
       preLoaderRoute: typeof AuthenticatedAdminProductsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/pdv': {
+      id: '/_authenticated/admin/pdv'
+      path: '/pdv'
+      fullPath: '/admin/pdv'
+      preLoaderRoute: typeof AuthenticatedAdminPdvRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/orders': {
@@ -289,6 +426,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminFinanceRoute: typeof AuthenticatedAdminFinanceRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
+  AuthenticatedAdminPdvRoute: typeof AuthenticatedAdminPdvRoute
   AuthenticatedAdminProductsRoute: typeof AuthenticatedAdminProductsRoute
   AuthenticatedAdminSalesRoute: typeof AuthenticatedAdminSalesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -300,6 +438,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
   AuthenticatedAdminFinanceRoute: AuthenticatedAdminFinanceRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
+  AuthenticatedAdminPdvRoute: AuthenticatedAdminPdvRoute,
   AuthenticatedAdminProductsRoute: AuthenticatedAdminProductsRoute,
   AuthenticatedAdminSalesRoute: AuthenticatedAdminSalesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
@@ -320,11 +459,39 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CheckoutRouteChildren {
+  CheckoutSucessoIdRoute: typeof CheckoutSucessoIdRoute
+}
+
+const CheckoutRouteChildren: CheckoutRouteChildren = {
+  CheckoutSucessoIdRoute: CheckoutSucessoIdRoute,
+}
+
+const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(
+  CheckoutRouteChildren,
+)
+
+interface MeusPedidosRouteChildren {
+  MeusPedidosIdRoute: typeof MeusPedidosIdRoute
+}
+
+const MeusPedidosRouteChildren: MeusPedidosRouteChildren = {
+  MeusPedidosIdRoute: MeusPedidosIdRoute,
+}
+
+const MeusPedidosRouteWithChildren = MeusPedidosRoute._addFileChildren(
+  MeusPedidosRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CheckoutRoute: CheckoutRouteWithChildren,
+  MeusPedidosRoute: MeusPedidosRouteWithChildren,
+  ComprovanteIdRoute: ComprovanteIdRoute,
   ProdutoIdRoute: ProdutoIdRoute,
+  ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

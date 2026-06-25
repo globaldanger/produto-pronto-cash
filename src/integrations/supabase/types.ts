@@ -127,51 +127,66 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancel_reason: string | null
+          channel: string
           created_at: string
           customer_address: string | null
-          customer_name: string
-          customer_phone: string
+          customer_name: string | null
+          customer_phone: string | null
+          discount: number
           id: string
           mp_payment_id: string | null
           notes: string | null
           paid_at: string | null
+          payment_method: string | null
           pix_expires_at: string | null
           pix_qr_code: string | null
           pix_qr_code_base64: string | null
+          refunded_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          cancel_reason?: string | null
+          channel?: string
           created_at?: string
           customer_address?: string | null
-          customer_name: string
-          customer_phone: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount?: number
           id?: string
           mp_payment_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_method?: string | null
           pix_expires_at?: string | null
           pix_qr_code?: string | null
           pix_qr_code_base64?: string | null
+          refunded_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          cancel_reason?: string | null
+          channel?: string
           created_at?: string
           customer_address?: string | null
-          customer_name?: string
-          customer_phone?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount?: number
           id?: string
           mp_payment_id?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_method?: string | null
           pix_expires_at?: string | null
           pix_qr_code?: string | null
           pix_qr_code_base64?: string | null
+          refunded_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
           updated_at?: string
@@ -261,6 +276,8 @@ export type Database = {
       }
       store_settings: {
         Row: {
+          about_gallery: string[]
+          about_hero_image: string | null
           about_stat1_label: string | null
           about_stat1_number: string | null
           about_stat2_label: string | null
@@ -276,6 +293,7 @@ export type Database = {
           pix_key: string | null
           store_address: string | null
           store_email: string | null
+          store_header_image: string | null
           store_hours: string | null
           store_instagram: string | null
           store_logo: string | null
@@ -287,6 +305,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          about_gallery?: string[]
+          about_hero_image?: string | null
           about_stat1_label?: string | null
           about_stat1_number?: string | null
           about_stat2_label?: string | null
@@ -302,6 +322,7 @@ export type Database = {
           pix_key?: string | null
           store_address?: string | null
           store_email?: string | null
+          store_header_image?: string | null
           store_hours?: string | null
           store_instagram?: string | null
           store_logo?: string | null
@@ -313,6 +334,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          about_gallery?: string[]
+          about_hero_image?: string | null
           about_stat1_label?: string | null
           about_stat1_number?: string | null
           about_stat2_label?: string | null
@@ -328,6 +351,7 @@ export type Database = {
           pix_key?: string | null
           store_address?: string | null
           store_email?: string | null
+          store_header_image?: string | null
           store_hours?: string | null
           store_instagram?: string | null
           store_logo?: string | null
@@ -366,6 +390,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_stock: {
+        Args: { _product_id: string; _qty: number }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -373,10 +401,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_stock: {
+        Args: { _product_id: string; _qty: number }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "cliente"
-      order_status: "pending" | "paid" | "cancelled" | "shipped" | "delivered"
+      order_status:
+        | "pending"
+        | "paid"
+        | "cancelled"
+        | "shipped"
+        | "delivered"
+        | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -505,7 +543,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "cliente"],
-      order_status: ["pending", "paid", "cancelled", "shipped", "delivered"],
+      order_status: [
+        "pending",
+        "paid",
+        "cancelled",
+        "shipped",
+        "delivered",
+        "refunded",
+      ],
     },
   },
 } as const
