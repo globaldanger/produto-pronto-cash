@@ -272,9 +272,12 @@ export type Database = {
           about_text1: string | null
           about_text2: string | null
           id: string
+          mercadopago_access_token: string | null
+          pix_key: string | null
           store_address: string | null
           store_email: string | null
           store_hours: string | null
+          store_instagram: string | null
           store_logo: string | null
           store_name: string
           store_phone: string | null
@@ -295,9 +298,12 @@ export type Database = {
           about_text1?: string | null
           about_text2?: string | null
           id?: string
+          mercadopago_access_token?: string | null
+          pix_key?: string | null
           store_address?: string | null
           store_email?: string | null
           store_hours?: string | null
+          store_instagram?: string | null
           store_logo?: string | null
           store_name?: string
           store_phone?: string | null
@@ -318,9 +324,12 @@ export type Database = {
           about_text1?: string | null
           about_text2?: string | null
           id?: string
+          mercadopago_access_token?: string | null
+          pix_key?: string | null
           store_address?: string | null
           store_email?: string | null
           store_hours?: string | null
+          store_instagram?: string | null
           store_logo?: string | null
           store_name?: string
           store_phone?: string | null
