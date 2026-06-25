@@ -9,6 +9,23 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@utility input {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--foreground);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+@utility input {
+  &:focus {
+    border-color: var(--primary);
+  }
+}
+
 /*
  * Design system definition.
  *
