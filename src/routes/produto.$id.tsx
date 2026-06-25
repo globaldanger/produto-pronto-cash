@@ -1,0 +1,133 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/produto/$id")({
+  head: () => ({ meta: [{ title: "Produto — SmartCell" }] }),
+  component: ProductPage,
+  notFoundComponent: () => (
+    <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
+      <div>
+        <h1 className="text-2xl font-bold">Produto não encontrado</h1>
+        <Link to="/" className="mt-4 inline-block text-primary hover:underline">
+          ← Voltar para a loja
+        </Link>
+      </div>
+    </div>
+  ),
+  errorComponent: ({ error }) => (
+    <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
+      <div>
+        <h1 className="text-xl font-bold">Erro ao carregar</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+      </div>
+    </div>
+  ),
+});
+
+type Product = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  sale_price: number | null;
+  stock: number;
+  images: string[];
+};
+
+function ProductPage() {
+  const { id } = Route.useParams();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(0);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id,name,description,price,sale_price,stock,images")
+        .eq("id", id)
+        .eq("active", true)
+        .maybeSingle();
+      if (error) console.error(error);
+      setProduct(data as Product | null);
+      setLoading(false);
+    })();
+  }, [id]);
+
+  if (loading) return <div className="p-12 text-center text-muted-foreground">Carregando...</div>;
+  if (!product) throw notFound();
+
+  const price = product.sale_price ?? product.price;
+  const cover = product.images[selected];
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border bg-surface">
+        <div className="container mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+          <Link to="/" className="flex items-center gap-3">
+            <i className="fa-solid fa-mobile-screen text-2xl text-primary" />
+            <span className="text-xl font-bold">SmartCell</span>
+          </Link>
+        </div>
+      </header>
+      <main className="container mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-2">
+        <div>
+          <div className="aspect-square overflow-hidden rounded-xl border border-border bg-card">
+            {cover ? (
+              <img src={cover} alt={product.name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                <i className="fa-solid fa-image text-5xl" />
+              </div>
+            )}
+          </div>
+          {product.images.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto">
+              {product.images.map((src, i) => (
+                <button
+                  key={src}
+                  onClick={() => setSelected(i)}
+                  className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg border-2 ${
+                    i === selected ? "border-primary" : "border-border"
+                  }`}
+                >
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold">{product.name}</h1>
+          <div className="mt-4 flex items-baseline gap-3">
+            {product.sale_price && (
+              <span className="text-lg text-muted-foreground line-through">
+                R$ {product.price.toFixed(2)}
+              </span>
+            )}
+            <span className="text-4xl font-bold text-primary">R$ {price.toFixed(2)}</span>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {product.stock > 0 ? `${product.stock} em estoque` : "Esgotado"}
+          </p>
+          {product.description && (
+            <p className="mt-6 whitespace-pre-line text-base leading-relaxed">
+              {product.description}
+            </p>
+          )}
+          <button
+            disabled={product.stock <= 0}
+            className="mt-8 w-full rounded-lg bg-primary py-4 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            <i className="fa-solid fa-cart-shopping mr-2" />
+            Adicionar ao carrinho
+          </button>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Carrinho e checkout via Pix chegam na próxima etapa.
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}
