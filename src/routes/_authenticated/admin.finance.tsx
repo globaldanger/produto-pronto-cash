@@ -12,7 +12,7 @@ type Expense = {
   id: string;
   description: string;
   amount: number;
-  category: string | null;
+  category: string;
   expense_date: string;
 };
 
@@ -170,10 +170,11 @@ function ExpenseModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return toast.error("Sessão expirada");
     const { error } = await supabase.from("expenses").insert({
-      ...form,
+      description: form.description,
       amount: Number(form.amount),
-      category: form.category || null,
-      user_id: u.user.id,
+      category: form.category || "Outros",
+      expense_date: form.expense_date,
+      created_by: u.user.id,
     });
     if (error) return toast.error(error.message);
     toast.success("Despesa adicionada");

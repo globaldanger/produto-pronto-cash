@@ -244,7 +244,6 @@ function ProductModal({
       images: form.images ?? [],
       active: form.active ?? true,
       featured: form.featured ?? false,
-      sku: form.sku || null,
     };
     const res = form.id
       ? await supabase.from("products").update(payload).eq("id", form.id)
@@ -274,9 +273,6 @@ function ProductModal({
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label="Nome *">
             <input className="input" value={form.name ?? ""} onChange={(e) => set("name", e.target.value)} />
-          </Field>
-          <Field label="SKU">
-            <input className="input" value={form.sku ?? ""} onChange={(e) => set("sku", e.target.value)} />
           </Field>
           <Field label="Categoria">
             <select className="input" value={form.category_id ?? ""} onChange={(e) => set("category_id", e.target.value || null)}>
