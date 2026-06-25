@@ -19,8 +19,6 @@
   font-size: 0.875rem;
   outline: none;
   transition: border-color 0.15s;
-}
-@utility input {
   &:focus {
     border-color: var(--primary);
   }
