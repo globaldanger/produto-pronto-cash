@@ -1,82 +1,89 @@
-# Plano — Carrinho, Checkout, Pedidos do Cliente, PDV e Configurações
+# Plano — Conteúdo do site, Busca, Papéis, Backup e Comprovante editável
 
-Vou entregar em **4 blocos**, todos nesta rodada.
+Tudo em uma rodada, dividido em 5 blocos.
 
 ---
 
-## Bloco 1 — Carrinho + Checkout online (cliente)
+## Bloco 1 — CMS "Conteúdo do site" no admin
 
-**Carrinho** (estado global via Zustand + localStorage):
-- Botão "Adicionar ao carrinho" com **seletor de quantidade** na vitrine (`/`) e em `/produto/$id`.
-- **Ícone de carrinho** no header (badge com qtd) abrindo um Drawer lateral com itens, +/-, remover, subtotal.
+Nova seção lateral **Conteúdo** com 4 abas, separada de Configurações (que fica só pra dados da loja + pagamento).
 
-**Checkout** (`/checkout`):
-- Requer login (redireciona para `/auth`).
-- Formulário: nome, telefone, endereço, observações (pré-preenchido do profile).
-- Resumo do pedido + total.
-- Botão **"Pagar com Pix"** → cria `order` + `order_items` e gera cobrança no Mercado Pago via server function (usa `mercadopago_access_token` das `store_settings`).
-- Página `/checkout/sucesso/$id` mostra QR Code Pix + código copia-e-cola + polling do status.
+**Schema** (1 migração — adiciona colunas em `store_settings`):
+- Home: `home_hero_title`, `home_hero_subtitle`, `home_hero_cta`, `home_banners` (jsonb[] com `{image, title, link}`).
+- Sobre: já existem (`about_text1/2`, `about_hero_image`, `about_gallery`) — só ganha UI melhor.
+- Produto: `product_page_shipping_text`, `product_page_warranty_text`, `product_page_extra_info` (textos que aparecem em todo produto).
+- FAQ: `faq` (jsonb com `[{question, answer}]`).
+- Rodapé: `footer_text`, `footer_links` (jsonb), `footer_payment_methods` (texto).
+- Comprovante: `receipt_header_text`, `receipt_footer_text`, `receipt_show_logo` (bool).
 
-**Webhook MP** já estava planejado: rota `src/routes/api/public/mp-webhook.ts` confirma `paid_at`, status `paid`, dá baixa no estoque.
+**UI** (`/admin/content`):
+- Tabs: Home / Sobre / Produto / FAQ / Rodapé.
+- Editor de banners e FAQ com adicionar/remover/reordenar.
+- Reuso de `uploadImage` pra tudo que é imagem.
 
-## Bloco 2 — Meus Pedidos (cliente)
+**Vitrine** (`/`, `/produto/$id`) passa a ler esses campos. Footer global novo em `StoreHeader` ou novo `StoreFooter`.
 
-- `/meus-pedidos` (protegido): lista de pedidos do usuário, status colorido, total, data.
-- `/meus-pedidos/$id`: detalhes, itens, endereço, status, QR Code se ainda pendente, botão cancelar (se `pending`).
-- Link "Meus pedidos" no header quando logado.
+## Bloco 2 — Busca (lupa)
 
-## Bloco 3 — PDV (loja física) + Comprovantes + Gestão de vendas
+- **Site (cliente)**: input de busca no `StoreHeader` (ícone lupa que abre overlay). Filtra produtos por nome/descrição/categoria. Mobile-friendly.
+- **Admin**: lupa global no topo do layout admin (`admin.tsx`) que busca em produtos, pedidos (id, cliente, telefone) e categorias — resultado como dropdown com link direto.
+- Implementação client-side com `ilike` no Supabase (debounced 300ms).
 
-**Novidades de schema** (1 migração):
-- `orders.channel` enum `online | fisica` (default `online`).
-- `orders.payment_method` text (`pix`, `dinheiro`, `cartao`, `outro`).
-- `orders.refunded_at` timestamptz, `orders.cancel_reason` text.
-- Novo status no enum `order_status`: `refunded`.
+## Bloco 3 — Papéis e permissões
 
-**PDV** (`/admin/pdv`):
-- Busca de produtos, adiciona ao "carrinho de balcão" com quantidade.
-- Campos: cliente (opcional), forma de pagamento, desconto.
-- Botão "Finalizar venda" cria order com `channel='fisica'`, status `paid`, baixa estoque imediatamente.
-- Após salvar, abre o **comprovante** em nova aba para imprimir.
+**Schema**:
+- Adicionar `'funcionario'` ao enum `app_role`.
 
-**Comprovante** (`/comprovante/$id`):
-- Layout otimizado para impressão (formato cupom, CSS `@media print`).
-- Dados da loja (do `store_settings`), itens, total, forma de pagamento, cliente, data.
-- Funciona para vendas online E físicas.
-- Botão "Imprimir".
+**Permissões** (resolvidas por helper `canAccess(role, section)` no front + checagem em RLS de tabelas sensíveis):
+- **admin**: tudo.
+- **funcionario**: Dashboard básico, **Produtos** (CRUD), **Categorias** (CRUD), **PDV**, **Pedidos** (ver e atualizar status) — bloqueado: Financeiro, Configurações, Conteúdo, Cancelar/Reembolsar, gestão de usuários.
+- **cliente**: só loja + meus pedidos.
 
-**Gestão em `/admin/orders`**:
-- Filtro por canal (online/física), status, busca.
-- Botão **Ver comprovante** (abre `/comprovante/$id`).
-- Botão **Editar venda** (modal: edita cliente, observações, itens — recalcula total).
-- Botão **Cancelar venda** (modal pedindo motivo, devolve estoque se já estava `paid`).
-- Botão **Reembolsar** (status `refunded`, devolve estoque, registra data).
+**Gestão de usuários** (`/admin/users`, só admin):
+- Lista usuários com papel atual.
+- Botões pra trocar papel: cliente ↔ funcionario ↔ admin.
+- Server function `setUserRole` protegida (verifica `has_role(admin)`).
 
-## Bloco 4 — Configurações ampliadas + Conteúdo da loja editável
+**Atualizar RLS** das tabelas `products`, `categories`, `orders` para aceitar `funcionario` onde faz sentido. `expenses` e `store_settings` permanecem só admin.
 
-**Schema** (mesma migração do Bloco 3):
-- `store_settings.store_header_image` text
-- `store_settings.about_hero_image` text
-- `store_settings.about_gallery` text[] (imagens da loja)
+## Bloco 4 — Export / Import / Backup
 
-**`/admin/settings`** ganha aba/seção **Aparência**:
-- Upload de **imagem do header**.
-- Upload de **logo** (já existe coluna, faltava UI).
-- Upload de **imagem hero do "Sobre"**.
-- Upload múltiplo da **galeria da loja**.
-- Edição dos textos "Sobre" (`about_text1`, `about_text2`) e stats — colunas já existem, faltava UI.
+**Nova seção `/admin/backup`** (só admin):
 
-**`/` (home)**: passa a renderizar a imagem do header, e uma seção "Sobre nossa loja" com os textos + galeria editáveis.
+**Export CSV** (botões por entidade):
+- Produtos, Pedidos, Despesas, Categorias — gerados client-side com `papaparse` a partir das queries.
+
+**Import CSV de produtos**:
+- Upload, preview da tabela, validação (nome/preço/estoque obrigatórios), confirma → bulk insert via server fn.
+
+**Backup completo (JSON)**:
+- Botão "Baixar backup" → server fn `exportBackup` agrega todas as tabelas (sem auth.users) e devolve JSON pra download.
+- Botão "Restaurar backup" → upload de JSON, confirma com modal de aviso, server fn `importBackup` faz upsert.
+- Ambas exigem `has_role(admin)`.
+
+## Bloco 5 — Comprovante editável
+
+**Personalização global** (já no Bloco 1 — campos `receipt_*` nas configs).
+
+**Revisar antes de finalizar venda no PDV**:
+- No `/admin/pdv`, antes do "Finalizar venda" abre **modal de revisão**:
+  - Lista de itens com edição inline de **quantidade, preço unitário, desconto por item**.
+  - Desconto geral, observações livres, escolha do método de pagamento.
+  - Pré-visualização do comprovante (renderiza `/comprovante/$id` mock em iframe ou render inline).
+  - "Confirmar e finalizar" → cria order com os ajustes.
+
+**Editar comprovante de venda já feita** (admin):
+- Em `/admin/orders`, botão "Editar comprovante" abre o mesmo editor → atualiza order/items, recalcula totais, devolve estoque dos itens removidos e debita dos adicionados.
 
 ---
 
 ## Detalhes técnicos
 
-- **Carrinho**: `src/stores/cart.ts` com Zustand `persist`. Tipos: `{ productId, name, image, price, quantity }`.
-- **Mercado Pago Pix**: server function `createPixPayment` em `src/lib/payments.functions.ts`, `POST /v1/payments` com `payment_method_id: 'pix'`. Token lido de `store_settings` (não env, pois é por loja).
-- **Webhook**: `/api/public/mp-webhook` valida `data.id`, busca pagamento na API MP, atualiza order por `mp_payment_id`.
-- **Upload header/galeria**: reutiliza `uploadProductImage` generalizando para outros prefixos no mesmo bucket.
-- **Comprovante imprimível**: rota pública leve, busca via server fn pública (somente dados não sensíveis ou exige login do dono/admin).
-- **Estoque**: helpers `decrementStock(items)` / `restoreStock(items)` chamados em paid/cancel/refund.
+- Helper `src/lib/permissions.ts` com `usePermissions()` (lê role do user e expõe `can('products.edit')`, etc).
+- Sidebar do `/admin` filtra links por permissão.
+- Layout admin (`admin.tsx`) verifica `admin|funcionario` em vez de só `admin`.
+- Server fns novas em `src/lib/admin.functions.ts`: `setUserRole`, `exportBackup`, `importBackup`, `bulkImportProducts`, `updateOrderItems`.
+- CSV via `papaparse` (já leve, ~40kb).
+- Busca: hook `useProductSearch(q)` com `useQuery` + `ilike`.
 
 Pronto pra construir tudo. Posso seguir?
