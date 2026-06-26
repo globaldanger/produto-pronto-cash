@@ -85,6 +85,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Capas, películas, carregadores, fones e acessórios para celular com pagamento via Pix." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "SmartCell — Tudo para seu Celular" },
+      { name: "twitter:description", content: "Capas, películas, carregadores, fones e acessórios para celular com pagamento via Pix." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/2ace20f7-377f-4fdb-9b7d-8e6453e2d35d/id-preview-e2922ee2--70c18907-c5ca-485b-9bc0-92e652c771b0.lovable.app-1782433420516.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/2ace20f7-377f-4fdb-9b7d-8e6453e2d35d/id-preview-e2922ee2--70c18907-c5ca-485b-9bc0-92e652c771b0.lovable.app-1782433420516.png" },
     ],
     links: [
       {
