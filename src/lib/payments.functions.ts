@@ -184,7 +184,7 @@ async function markOrderPaid(orderId: string) {
 }
 
 type AdminSaleInput = {
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; quantity: number; unitPrice?: number }[];
   customer: { name?: string; phone?: string };
   payment_method: string;
   discount?: number;
@@ -199,11 +199,9 @@ export const createPhysicalSale = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (!isAdmin) throw new Error("Apenas admin");
+    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    const { data: isFunc } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "funcionario" });
+    if (!isAdmin && !isFunc) throw new Error("Sem permissão para registrar vendas");
 
     const ids = data.items.map((i) => i.productId);
     const { data: prods } = await supabaseAdmin
@@ -216,7 +214,7 @@ export const createPhysicalSale = createServerFn({ method: "POST" })
     const orderItems = data.items.map((i) => {
       const p = prods.find((x) => x.id === i.productId)!;
       if (i.quantity > p.stock) throw new Error(`Estoque insuficiente: ${p.name}`);
-      const unit = Number(p.sale_price ?? p.price);
+      const unit = i.unitPrice != null ? Number(i.unitPrice) : Number(p.sale_price ?? p.price);
       subtotal += unit * i.quantity;
       return {
         product_id: p.id,

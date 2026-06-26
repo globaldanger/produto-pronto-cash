@@ -30,6 +30,10 @@ function PDV() {
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewItems, setReviewItems] = useState<SaleItem[]>([]);
+  const [reviewHeader, setReviewHeader] = useState("");
+  const [reviewFooter, setReviewFooter] = useState("");
 
   const { data: products = [] } = useQuery({
     queryKey: ["pdv-products", search],
@@ -74,17 +78,30 @@ function PDV() {
   const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
   const total = Math.max(0, subtotal - discount);
 
+  function openReview() {
+    if (cart.length === 0) return toast.error("Adicione produtos");
+    setReviewItems(cart.map((i) => ({ ...i })));
+    setReviewHeader("");
+    setReviewFooter("");
+    setReviewOpen(true);
+  }
+
+  const reviewSubtotal = reviewItems.reduce((s, i) => s + i.price * i.quantity, 0);
+  const reviewTotal = Math.max(0, reviewSubtotal - discount);
+
   async function finalize() {
     if (cart.length === 0) return toast.error("Adicione produtos");
+    const items = reviewOpen ? reviewItems : cart;
     setSaving(true);
     try {
+      const extraNotes = [reviewHeader, notes, reviewFooter].filter(Boolean).join("\n");
       const res = await submit({
         data: {
-          items: cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPrice: i.price })),
           customer,
           payment_method: payment,
           discount,
-          notes,
+          notes: extraNotes || undefined,
         },
       });
       toast.success("Venda registrada!");
@@ -93,6 +110,7 @@ function PDV() {
       setCustomer({ name: "", phone: "" });
       setDiscount(0);
       setNotes("");
+      setReviewOpen(false);
       navigate({ to: "/admin/orders" });
     } catch (e) {
       toast.error((e as Error).message);
@@ -205,12 +223,45 @@ function PDV() {
 
         <button
           disabled={saving || cart.length === 0}
-          onClick={finalize}
+          onClick={openReview}
           className="w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          {saving ? "Salvando..." : "Finalizar venda"}
+          Revisar e finalizar
         </button>
       </aside>
+
+      {reviewOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6">
+            <h3 className="mb-1 text-lg font-bold"><i className="fa-solid fa-receipt mr-2 text-primary" />Revisar comprovante</h3>
+            <p className="mb-4 text-xs text-muted-foreground">Edite preços, quantidades e adicione mensagens antes de finalizar.</p>
+            <textarea rows={2} placeholder="Mensagem no topo do comprovante (opcional)" className="input mb-3" value={reviewHeader} onChange={(e) => setReviewHeader(e.target.value)} />
+            <div className="space-y-2">
+              {reviewItems.map((i, idx) => (
+                <div key={i.productId} className="grid grid-cols-[1fr_70px_90px_30px] gap-2 items-center rounded border border-border p-2">
+                  <div className="min-w-0 truncate text-sm font-semibold">{i.name}</div>
+                  <input type="number" min={0} className="input text-sm" value={i.quantity}
+                    onChange={(e) => { const v = Math.max(0, Math.min(e.target.valueAsNumber || 0, i.stock)); const c = [...reviewItems]; c[idx] = { ...i, quantity: v }; setReviewItems(c.filter((x) => x.quantity > 0)); }} />
+                  <input type="number" step="0.01" min={0} className="input text-sm" value={i.price}
+                    onChange={(e) => { const c = [...reviewItems]; c[idx] = { ...i, price: e.target.valueAsNumber || 0 }; setReviewItems(c); }} />
+                  <button onClick={() => setReviewItems(reviewItems.filter((_, j) => j !== idx))} className="text-destructive"><i className="fa-solid fa-trash" /></button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <input type="number" step="0.01" placeholder="Desconto (R$)" className="input" value={discount || ""} onChange={(e) => setDiscount(e.target.valueAsNumber || 0)} />
+              <div className="flex items-center justify-end text-lg font-bold text-primary">Total R$ {reviewTotal.toFixed(2)}</div>
+            </div>
+            <textarea rows={2} placeholder="Mensagem no rodapé do comprovante (opcional)" className="input mt-3" value={reviewFooter} onChange={(e) => setReviewFooter(e.target.value)} />
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setReviewOpen(false)} disabled={saving} className="rounded-md border border-border px-4 py-2 text-sm hover:border-destructive">Cancelar</button>
+              <button onClick={finalize} disabled={saving || reviewItems.length === 0} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+                {saving ? "Salvando..." : "Confirmar venda"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

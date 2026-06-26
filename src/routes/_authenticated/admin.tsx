@@ -4,28 +4,33 @@ import {
   Outlet,
   useRouterState,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { usePermissions, type Permission } from "@/lib/permissions";
+import { AdminSearch } from "@/components/AdminSearch";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Painel Admin — SmartCell" }] }),
   component: AdminLayout,
 });
 
-const NAV: { to: string; icon: string; label: string; exact?: boolean }[] = [
-  { to: "/admin", icon: "fa-tachometer-alt", label: "Dashboard", exact: true },
-  { to: "/admin/pdv", icon: "fa-cash-register", label: "PDV (Balcão)" },
-  { to: "/admin/sales", icon: "fa-dollar-sign", label: "Vendas" },
-  { to: "/admin/products", icon: "fa-box", label: "Produtos" },
-  { to: "/admin/categories", icon: "fa-tags", label: "Categorias" },
-  { to: "/admin/orders", icon: "fa-shopping-cart", label: "Pedidos" },
-  { to: "/admin/finance", icon: "fa-chart-line", label: "Financeiro" },
-  { to: "/admin/about", icon: "fa-circle-info", label: "Sobre" },
-  { to: "/admin/settings", icon: "fa-cog", label: "Configurações" },
+const NAV: { to: string; icon: string; label: string; exact?: boolean; perm: Permission }[] = [
+  { to: "/admin", icon: "fa-tachometer-alt", label: "Dashboard", exact: true, perm: "dashboard" },
+  { to: "/admin/pdv", icon: "fa-cash-register", label: "PDV (Balcão)", perm: "pdv" },
+  { to: "/admin/sales", icon: "fa-dollar-sign", label: "Vendas", perm: "sales" },
+  { to: "/admin/products", icon: "fa-box", label: "Produtos", perm: "products" },
+  { to: "/admin/categories", icon: "fa-tags", label: "Categorias", perm: "categories" },
+  { to: "/admin/orders", icon: "fa-shopping-cart", label: "Pedidos", perm: "orders.view" },
+  { to: "/admin/finance", icon: "fa-chart-line", label: "Financeiro", perm: "finance" },
+  { to: "/admin/content", icon: "fa-pen-ruler", label: "Conteúdo do site", perm: "content" },
+  { to: "/admin/users", icon: "fa-users", label: "Usuários", perm: "users" },
+  { to: "/admin/backup", icon: "fa-download", label: "Backup / Import", perm: "backup" },
+  { to: "/admin/about", icon: "fa-circle-info", label: "Sobre", perm: "content" },
+  { to: "/admin/settings", icon: "fa-cog", label: "Configurações", perm: "settings" },
 ];
 
 function AdminLayout() {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const { role, loading, can, isStaff } = usePermissions();
   const [name, setName] = useState("Administrador");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -33,16 +38,7 @@ function AdminLayout() {
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        setIsAdmin(false);
-        return;
-      }
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", u.user.id);
-      const admin = (roles ?? []).some((r) => r.role === "admin");
-      setIsAdmin(admin);
+      if (!u.user) return;
       const { data: prof } = await supabase
         .from("profiles")
         .select("full_name")
@@ -58,21 +54,23 @@ function AdminLayout() {
     setSidebarOpen(false);
   }, [pathname]);
 
-  if (isAdmin === null) {
+  const visibleNav = useMemo(() => NAV.filter((n) => can(n.perm)), [role]);
+
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
         Carregando...
       </div>
     );
   }
-  if (!isAdmin) {
+  if (!isStaff) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6">
         <div className="max-w-md rounded-xl border border-border bg-card p-8 text-center">
           <i className="fa-solid fa-lock mb-4 text-4xl text-destructive" />
           <h1 className="mb-2 text-xl font-bold">Acesso restrito</h1>
           <p className="text-sm text-muted-foreground">
-            Sua conta não tem permissão de administrador.
+            Sua conta não tem permissão para acessar o painel.
           </p>
           <Link to="/" className="mt-6 inline-block text-primary hover:underline">
             ← Voltar para a loja
@@ -82,7 +80,7 @@ function AdminLayout() {
     );
   }
 
-  const current = NAV.find((n) =>
+  const current = visibleNav.find((n) =>
     n.exact ? pathname === n.to : pathname.startsWith(n.to),
   );
 
@@ -111,7 +109,7 @@ function AdminLayout() {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3">
-          {NAV.map((item) => {
+          {visibleNav.map((item) => {
             const active = item.exact
               ? pathname === item.to
               : pathname.startsWith(item.to);
@@ -139,7 +137,7 @@ function AdminLayout() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold">{name}</div>
-              <div className="text-xs text-muted-foreground">Administrador</div>
+              <div className="text-xs text-muted-foreground capitalize">{role}</div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -178,16 +176,10 @@ function AdminLayout() {
               <span>{current?.label ?? "Admin"}</span>
             </div>
           </div>
-          <div className="hidden text-sm text-muted-foreground sm:block">
-            {new Date().toLocaleDateString("pt-BR", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </div>
+          <div className="flex-1 max-w-md ml-4 hidden md:block"><AdminSearch /></div>
         </header>
         <main className="flex-1 p-4 lg:p-8">
+          <div className="mb-4 md:hidden"><AdminSearch /></div>
           <Outlet />
         </main>
       </div>

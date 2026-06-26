@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/stores/cart";
 import { useQuery } from "@tanstack/react-query";
+import { StoreSearch } from "@/components/StoreSearch";
 
 export function StoreHeader() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
@@ -53,7 +54,13 @@ export function StoreHeader() {
             {settings?.store_name ?? "SmartCell"}
           </span>
         </Link>
+        <div className="hidden flex-1 max-w-md mx-6 md:block">
+          <StoreSearch />
+        </div>
         <nav className="flex items-center gap-3 text-sm">
+          <div className="md:hidden">
+            <StoreSearch compact />
+          </div>
           <button
             onClick={() => toggleCart(true)}
             className="relative rounded-md border border-border px-3 py-2 hover:border-primary hover:text-primary"
