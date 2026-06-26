@@ -288,9 +288,23 @@ export type Database = {
           about_stat4_number: string | null
           about_text1: string | null
           about_text2: string | null
+          faq: Json
+          footer_links: Json
+          footer_payment_methods: string | null
+          footer_text: string | null
+          home_banners: Json
+          home_hero_cta: string | null
+          home_hero_subtitle: string | null
+          home_hero_title: string | null
           id: string
           mercadopago_access_token: string | null
           pix_key: string | null
+          product_page_extra_info: string | null
+          product_page_shipping_text: string | null
+          product_page_warranty_text: string | null
+          receipt_footer_text: string | null
+          receipt_header_text: string | null
+          receipt_show_logo: boolean
           store_address: string | null
           store_email: string | null
           store_header_image: string | null
@@ -317,9 +331,23 @@ export type Database = {
           about_stat4_number?: string | null
           about_text1?: string | null
           about_text2?: string | null
+          faq?: Json
+          footer_links?: Json
+          footer_payment_methods?: string | null
+          footer_text?: string | null
+          home_banners?: Json
+          home_hero_cta?: string | null
+          home_hero_subtitle?: string | null
+          home_hero_title?: string | null
           id?: string
           mercadopago_access_token?: string | null
           pix_key?: string | null
+          product_page_extra_info?: string | null
+          product_page_shipping_text?: string | null
+          product_page_warranty_text?: string | null
+          receipt_footer_text?: string | null
+          receipt_header_text?: string | null
+          receipt_show_logo?: boolean
           store_address?: string | null
           store_email?: string | null
           store_header_image?: string | null
@@ -346,9 +374,23 @@ export type Database = {
           about_stat4_number?: string | null
           about_text1?: string | null
           about_text2?: string | null
+          faq?: Json
+          footer_links?: Json
+          footer_payment_methods?: string | null
+          footer_text?: string | null
+          home_banners?: Json
+          home_hero_cta?: string | null
+          home_hero_subtitle?: string | null
+          home_hero_title?: string | null
           id?: string
           mercadopago_access_token?: string | null
           pix_key?: string | null
+          product_page_extra_info?: string | null
+          product_page_shipping_text?: string | null
+          product_page_warranty_text?: string | null
+          receipt_footer_text?: string | null
+          receipt_header_text?: string | null
+          receipt_show_logo?: boolean
           store_address?: string | null
           store_email?: string | null
           store_header_image?: string | null
