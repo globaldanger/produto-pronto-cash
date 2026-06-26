@@ -21,6 +21,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as CheckoutSucessoIdRouteImport } from './routes/checkout.sucesso.$id'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminSalesRouteImport } from './routes/_authenticated/admin.sales'
 import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authenticated/admin.products'
@@ -89,6 +90,11 @@ const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   id: '/api/public/mp-webhook',
   path: '/api/public/mp-webhook',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/checkout/sucesso/$id': typeof CheckoutSucessoIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/checkout/sucesso/$id': typeof CheckoutSucessoIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/products': typeof AuthenticatedAdminProductsRoute
   '/_authenticated/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/checkout/sucesso/$id': typeof CheckoutSucessoIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/sales'
     | '/admin/settings'
+    | '/admin/users'
     | '/api/public/mp-webhook'
     | '/checkout/sucesso/$id'
     | '/admin/'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/sales'
     | '/admin/settings'
+    | '/admin/users'
     | '/api/public/mp-webhook'
     | '/checkout/sucesso/$id'
     | '/admin'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/products'
     | '/_authenticated/admin/sales'
     | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/users'
     | '/api/public/mp-webhook'
     | '/checkout/sucesso/$id'
     | '/_authenticated/admin/'
@@ -375,6 +387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/settings': {
       id: '/_authenticated/admin/settings'
       path: '/settings'
@@ -451,6 +470,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminProductsRoute: typeof AuthenticatedAdminProductsRoute
   AuthenticatedAdminSalesRoute: typeof AuthenticatedAdminSalesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
@@ -464,6 +484,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminProductsRoute: AuthenticatedAdminProductsRoute,
   AuthenticatedAdminSalesRoute: AuthenticatedAdminSalesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
