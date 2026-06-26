@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { cancelOrder, refundOrder } from "@/lib/payments.functions";
+import { updateOrderItems } from "@/lib/admin.functions";
+import { usePermissions } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
   component: OrdersPage,
@@ -42,6 +44,13 @@ function OrdersPage() {
   const [channelFilter, setChannelFilter] = useState<string>("all");
   const doCancel = useServerFn(cancelOrder);
   const doRefund = useServerFn(refundOrder);
+  const doUpdate = useServerFn(updateOrderItems);
+  const { isAdmin } = usePermissions();
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editItems, setEditItems] = useState<{ product_id: string; product_name: string; quantity: number; unit_price: number }[]>([]);
+  const [editNotes, setEditNotes] = useState("");
+  const [editDiscount, setEditDiscount] = useState(0);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const { data: orders = [] } = useQuery({
     queryKey: ["admin", "orders", filter, channelFilter],
@@ -84,6 +93,30 @@ function OrdersPage() {
     } catch (e) {
       toast.error((e as Error).message);
     }
+  }
+
+  async function openEdit(id: string) {
+    const [{ data: o }, { data: items }] = await Promise.all([
+      supabase.from("orders").select("id,discount,notes").eq("id", id).maybeSingle(),
+      supabase.from("order_items").select("product_id,product_name,quantity,unit_price").eq("order_id", id),
+    ]);
+    if (!o) return toast.error("Pedido não encontrado");
+    setEditing(id);
+    setEditItems((items ?? []).map((i) => ({ ...i, unit_price: Number(i.unit_price), quantity: Number(i.quantity) })));
+    setEditNotes(o.notes ?? "");
+    setEditDiscount(Number(o.discount ?? 0));
+  }
+
+  async function saveEdit() {
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      await doUpdate({ data: { orderId: editing, items: editItems, discount: editDiscount, notes: editNotes } });
+      toast.success("Comprovante atualizado");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setSavingEdit(false); }
   }
 
   return (
@@ -190,11 +223,54 @@ function OrdersPage() {
                         <i className="fa-solid fa-rotate-left" />
                       </button>
                     ) : null}
+                    {isAdmin && o.status !== "cancelled" && o.status !== "refunded" && (
+                      <button
+                        onClick={() => openEdit(o.id)}
+                        className="ml-1 rounded border border-border px-2 py-1 text-xs hover:border-primary hover:text-primary"
+                        title="Editar comprovante"
+                      >
+                        <i className="fa-solid fa-pen" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6">
+            <h3 className="mb-1 text-lg font-bold"><i className="fa-solid fa-pen-to-square mr-2 text-primary" />Editar comprovante</h3>
+            <p className="mb-4 text-xs text-muted-foreground">Ajuste itens, preços e observações. O estoque é recalculado se o pedido já foi pago.</p>
+            <div className="space-y-2">
+              {editItems.map((i, idx) => (
+                <div key={idx} className="grid grid-cols-[1fr_70px_90px_30px] items-center gap-2 rounded border border-border p-2">
+                  <div className="min-w-0 truncate text-sm font-semibold">{i.product_name}</div>
+                  <input type="number" min={0} className="input text-sm" value={i.quantity}
+                    onChange={(e) => { const c = [...editItems]; c[idx] = { ...i, quantity: Math.max(0, e.target.valueAsNumber || 0) }; setEditItems(c); }} />
+                  <input type="number" step="0.01" min={0} className="input text-sm" value={i.unit_price}
+                    onChange={(e) => { const c = [...editItems]; c[idx] = { ...i, unit_price: e.target.valueAsNumber || 0 }; setEditItems(c); }} />
+                  <button onClick={() => setEditItems(editItems.filter((_, j) => j !== idx))} className="text-destructive"><i className="fa-solid fa-trash" /></button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <input type="number" step="0.01" placeholder="Desconto (R$)" className="input" value={editDiscount || ""} onChange={(e) => setEditDiscount(e.target.valueAsNumber || 0)} />
+              <div className="flex items-center justify-end text-lg font-bold text-primary">
+                Total R$ {Math.max(0, editItems.reduce((s,i)=>s+i.unit_price*i.quantity,0) - editDiscount).toFixed(2)}
+              </div>
+            </div>
+            <textarea rows={3} className="input mt-3" placeholder="Observações" value={editNotes} onChange={(e) => setEditNotes(e.target.value)} />
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setEditing(null)} disabled={savingEdit} className="rounded-md border border-border px-4 py-2 text-sm hover:border-destructive">Cancelar</button>
+              <button onClick={saveEdit} disabled={savingEdit || editItems.length === 0} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60">
+                {savingEdit ? "Salvando..." : "Salvar alterações"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
