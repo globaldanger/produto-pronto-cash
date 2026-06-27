@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,13 +15,28 @@ export const Route = createFileRoute("/checkout")({
 
 function CheckoutPage() {
   const navigate = useNavigate();
-  const { items, total, clear } = useCart();
+  const { items, total, clear, setQty, remove } = useCart();
   const submit = useServerFn(createPixCheckout);
 
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const [form, setForm] = useState({ name: "", phone: "", address: "", notes: "", email: "" });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    notes: "",
+    delivery_type: "delivery" as "delivery" | "pickup",
+    cep: "",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+  });
+  const [payment, setPayment] = useState<"pix" | "card">("pix");
   const [loading, setLoading] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -46,18 +61,50 @@ function CheckoutPage() {
     })();
   }, [navigate]);
 
+  async function lookupCep(raw: string) {
+    const cep = raw.replace(/\D/g, "");
+    if (cep.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const j = await r.json();
+      if (j?.erro) return toast.error("CEP não encontrado");
+      setForm((f) => ({
+        ...f,
+        cep,
+        street: j.logradouro ?? f.street,
+        neighborhood: j.bairro ?? f.neighborhood,
+        city: j.localidade ?? f.city,
+        state: j.uf ?? f.state,
+      }));
+    } catch {
+      toast.error("Falha ao buscar CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }
+
   async function pay() {
     if (!form.name || !form.phone) return toast.error("Preencha nome e telefone");
     if (items.length === 0) return toast.error("Carrinho vazio");
+    if (form.delivery_type === "delivery") {
+      if (!form.cep || !form.street || !form.number || !form.city)
+        return toast.error("Preencha CEP, rua, número e cidade");
+    }
     setLoading(true);
     try {
       const res = await submit({
         data: {
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
           customer: form,
+          payment_method: payment,
         },
       });
       clear();
+      if (res.redirectUrl) {
+        window.location.href = res.redirectUrl;
+        return;
+      }
       navigate({ to: "/checkout/sucesso/$id", params: { id: res.orderId } });
     } catch (e) {
       toast.error((e as Error).message);
@@ -66,6 +113,8 @@ function CheckoutPage() {
     }
   }
 
+  const itemsTotal = useMemo(() => total(), [items, total]);
+
   if (checking || !user) {
     return <div className="p-12 text-center text-muted-foreground">Carregando...</div>;
   }
@@ -73,80 +122,221 @@ function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <StoreHeader />
-      <main className="container mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-[1fr_380px]">
-        <section className="rounded-xl border border-border bg-card p-6">
-          <h1 className="mb-4 text-2xl font-bold">Dados de entrega</h1>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <Field label="Nome completo *">
-              <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </Field>
-            <Field label="Telefone *">
-              <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            </Field>
-            <div className="md:col-span-2">
-              <Field label="Endereço (rua, número, bairro, cidade)">
-                <textarea
-                  rows={2}
-                  className="input"
-                  value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
-                />
-              </Field>
-            </div>
-            <div className="md:col-span-2">
-              <Field label="Observações">
-                <textarea
-                  rows={2}
-                  className="input"
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                />
-              </Field>
-            </div>
-          </div>
-        </section>
+      <main className="container mx-auto max-w-6xl px-4 py-6 md:py-10">
+        <div className="mb-6 flex items-center gap-3">
+          <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
+            <i className="fa-solid fa-arrow-left mr-1" /> Continuar comprando
+          </Link>
+        </div>
+        <h1 className="mb-6 text-3xl font-extrabold tracking-tight md:text-4xl">
+          Finalizar <span className="text-primary">compra</span>
+        </h1>
 
-        <aside className="space-y-4 rounded-xl border border-border bg-card p-6">
-          <h2 className="text-lg font-bold">Seu pedido</h2>
-          {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Carrinho vazio. <Link to="/" className="text-primary hover:underline">Voltar para a loja</Link>
-            </p>
-          ) : (
-            <>
-              <ul className="divide-y divide-border text-sm">
-                {items.map((i) => (
-                  <li key={i.productId} className="flex justify-between gap-2 py-2">
-                    <span className="line-clamp-1">
-                      {i.quantity}× {i.name}
-                    </span>
-                    <span className="shrink-0 text-muted-foreground">
-                      R$ {(i.price * i.quantity).toFixed(2)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex items-baseline justify-between border-t border-border pt-3">
-                <span className="text-muted-foreground">Total</span>
-                <span className="text-2xl font-bold text-primary">R$ {total().toFixed(2)}</span>
+        <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
+          <div className="space-y-6">
+            <Section icon="fa-truck" title="Como você quer receber?">
+              <div className="grid grid-cols-2 gap-3">
+                <OptionCard
+                  active={form.delivery_type === "delivery"}
+                  onClick={() => setForm({ ...form, delivery_type: "delivery" })}
+                  icon="fa-house"
+                  title="Entrega"
+                  desc="Receba no endereço"
+                />
+                <OptionCard
+                  active={form.delivery_type === "pickup"}
+                  onClick={() => setForm({ ...form, delivery_type: "pickup" })}
+                  icon="fa-store"
+                  title="Retirar na loja"
+                  desc="Sem custo de entrega"
+                />
               </div>
-              <button
-                onClick={pay}
-                disabled={loading}
-                className="w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
-                {loading ? (
-                  <><i className="fa-solid fa-spinner fa-spin mr-2" /> Gerando Pix...</>
-                ) : (
-                  <><i className="fa-brands fa-pix mr-2" /> Pagar com Pix</>
-                )}
-              </button>
-              <p className="text-center text-xs text-muted-foreground">
-                Pagamento processado via Mercado Pago
-              </p>
-            </>
-          )}
-        </aside>
+            </Section>
+
+            <Section icon="fa-user" title="Seus dados">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Nome completo *">
+                  <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                </Field>
+                <Field label="Telefone / WhatsApp *">
+                  <input className="input" placeholder="(00) 00000-0000" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                </Field>
+                <div className="md:col-span-2">
+                  <Field label="E-mail">
+                    <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  </Field>
+                </div>
+              </div>
+            </Section>
+
+            {form.delivery_type === "delivery" && (
+              <Section icon="fa-location-dot" title="Endereço de entrega">
+                <div className="grid gap-3 md:grid-cols-6">
+                  <div className="md:col-span-2">
+                    <Field label="CEP *">
+                      <div className="relative">
+                        <input
+                          className="input pr-9"
+                          placeholder="00000-000"
+                          value={form.cep}
+                          onChange={(e) => setForm({ ...form, cep: e.target.value })}
+                          onBlur={(e) => lookupCep(e.target.value)}
+                          maxLength={9}
+                        />
+                        {cepLoading && <i className="fa-solid fa-spinner fa-spin absolute right-3 top-2.5 text-primary" />}
+                      </div>
+                    </Field>
+                  </div>
+                  <div className="md:col-span-4">
+                    <Field label="Rua *">
+                      <input className="input" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
+                    </Field>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Field label="Número *">
+                      <input className="input" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
+                    </Field>
+                  </div>
+                  <div className="md:col-span-4">
+                    <Field label="Complemento">
+                      <input className="input" placeholder="Apto, bloco, ponto de referência" value={form.complement} onChange={(e) => setForm({ ...form, complement: e.target.value })} />
+                    </Field>
+                  </div>
+                  <div className="md:col-span-3">
+                    <Field label="Bairro">
+                      <input className="input" value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} />
+                    </Field>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Field label="Cidade *">
+                      <input className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                    </Field>
+                  </div>
+                  <div className="md:col-span-1">
+                    <Field label="UF">
+                      <input className="input" maxLength={2} value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value.toUpperCase() })} />
+                    </Field>
+                  </div>
+                </div>
+              </Section>
+            )}
+
+            <Section icon="fa-credit-card" title="Forma de pagamento">
+              <div className="grid gap-3 md:grid-cols-2">
+                <OptionCard
+                  active={payment === "pix"}
+                  onClick={() => setPayment("pix")}
+                  icon="fa-qrcode"
+                  title="Pix"
+                  desc="Aprovação imediata"
+                  badge="Recomendado"
+                />
+                <OptionCard
+                  active={payment === "card"}
+                  onClick={() => setPayment("card")}
+                  icon="fa-credit-card"
+                  title="Cartão"
+                  desc="Crédito ou Débito · até 12x"
+                />
+              </div>
+            </Section>
+
+            <Section icon="fa-message" title="Observações (opcional)">
+              <textarea
+                rows={3}
+                className="input"
+                placeholder="Alguma informação para o vendedor?"
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              />
+            </Section>
+          </div>
+
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <div className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-lg">
+              <h2 className="flex items-center gap-2 text-lg font-bold">
+                <i className="fa-solid fa-bag-shopping text-primary" /> Resumo do pedido
+              </h2>
+              {items.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Carrinho vazio.{" "}
+                  <Link to="/" className="text-primary hover:underline">
+                    Ir para a loja
+                  </Link>
+                </p>
+              ) : (
+                <>
+                  <ul className="max-h-72 space-y-3 overflow-y-auto pr-1">
+                    {items.map((i) => (
+                      <li key={i.productId} className="flex gap-3">
+                        {i.image ? (
+                          <img src={i.image} alt="" className="h-14 w-14 shrink-0 rounded-md border border-border object-cover" />
+                        ) : (
+                          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-md border border-border bg-surface text-muted-foreground">
+                            <i className="fa-solid fa-image" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-2 text-xs font-semibold">{i.name}</p>
+                          <div className="mt-1 flex items-center gap-1">
+                            <button
+                              onClick={() => setQty(i.productId, i.quantity - 1)}
+                              className="grid h-6 w-6 place-items-center rounded border border-border text-xs hover:border-primary"
+                            >−</button>
+                            <span className="w-6 text-center text-xs font-bold">{i.quantity}</span>
+                            <button
+                              onClick={() => setQty(i.productId, i.quantity + 1)}
+                              className="grid h-6 w-6 place-items-center rounded border border-border text-xs hover:border-primary"
+                            >+</button>
+                            <button
+                              onClick={() => remove(i.productId)}
+                              className="ml-auto text-xs text-muted-foreground hover:text-destructive"
+                              title="Remover"
+                            ><i className="fa-solid fa-trash" /></button>
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right text-sm font-bold">
+                          R$ {(i.price * i.quantity).toFixed(2)}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="space-y-1 border-t border-border pt-3 text-sm">
+                    <Row label="Subtotal" value={`R$ ${itemsTotal.toFixed(2)}`} />
+                    <Row
+                      label={form.delivery_type === "pickup" ? "Retirada" : "Entrega"}
+                      value={form.delivery_type === "pickup" ? "Grátis" : "A combinar"}
+                      muted
+                    />
+                  </div>
+                  <div className="flex items-baseline justify-between border-t border-border pt-3">
+                    <span className="text-muted-foreground">Total</span>
+                    <span className="text-3xl font-extrabold text-primary">R$ {itemsTotal.toFixed(2)}</span>
+                  </div>
+
+                  <button
+                    onClick={pay}
+                    disabled={loading}
+                    className="w-full rounded-xl bg-primary py-3.5 text-base font-bold text-primary-foreground shadow-md transition hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <><i className="fa-solid fa-spinner fa-spin mr-2" /> Processando...</>
+                    ) : payment === "pix" ? (
+                      <><i className="fa-solid fa-qrcode mr-2" /> Gerar QR Code Pix</>
+                    ) : (
+                      <><i className="fa-solid fa-lock mr-2" /> Pagar com cartão</>
+                    )}
+                  </button>
+                  <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                    <i className="fa-solid fa-shield-halved text-success" />
+                    Pagamento seguro via Mercado Pago
+                  </div>
+                </>
+              )}
+            </div>
+          </aside>
+        </div>
       </main>
       <CartDrawer />
     </div>
@@ -156,8 +346,61 @@ function CheckoutPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-muted-foreground">{label}</label>
+      <label className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</label>
       {children}
+    </div>
+  );
+}
+
+function Section({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6">
+      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+          <i className={`fa-solid ${icon}`} />
+        </span>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function OptionCard({
+  active, onClick, icon, title, desc, badge,
+}: {
+  active: boolean; onClick: () => void; icon: string; title: string; desc: string; badge?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative flex items-center gap-3 rounded-xl border-2 p-4 text-left transition ${
+        active ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card hover:border-primary/40"
+      }`}
+    >
+      <span className={`grid h-10 w-10 place-items-center rounded-lg ${active ? "bg-primary text-primary-foreground" : "bg-surface text-muted-foreground"}`}>
+        <i className={`fa-solid ${icon}`} />
+      </span>
+      <span className="flex-1">
+        <span className="block font-bold leading-tight">{title}</span>
+        <span className="block text-xs text-muted-foreground">{desc}</span>
+      </span>
+      {active && <i className="fa-solid fa-circle-check text-primary" />}
+      {badge && (
+        <span className="absolute -top-2 right-3 rounded-full bg-success px-2 py-0.5 text-[10px] font-bold uppercase text-success-foreground">
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function Row({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={muted ? "text-muted-foreground" : "font-semibold"}>{value}</span>
     </div>
   );
 }
