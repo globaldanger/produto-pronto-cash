@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { cancelOrder, refundOrder } from "@/lib/payments.functions";
+import { cancelOrder, refundOrder, deleteOrder } from "@/lib/payments.functions";
 import { updateOrderItems } from "@/lib/admin.functions";
 import { usePermissions } from "@/lib/permissions";
 
@@ -45,6 +45,7 @@ function OrdersPage() {
   const doCancel = useServerFn(cancelOrder);
   const doRefund = useServerFn(refundOrder);
   const doUpdate = useServerFn(updateOrderItems);
+  const doDelete = useServerFn(deleteOrder);
   const { isAdmin } = usePermissions();
   const [editing, setEditing] = useState<string | null>(null);
   const [editItems, setEditItems] = useState<{ product_id: string; product_name: string; quantity: number; unit_price: number }[]>([]);
@@ -89,6 +90,17 @@ function OrdersPage() {
     try {
       await doRefund({ data: { orderId: id, reason } });
       toast.success("Pedido reembolsado");
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function destroy(id: string) {
+    if (!confirm("Apagar este pedido permanentemente? Esta ação não pode ser desfeita.")) return;
+    try {
+      await doDelete({ data: { orderId: id } });
+      toast.success("Pedido apagado");
       qc.invalidateQueries({ queryKey: ["admin", "orders"] });
     } catch (e) {
       toast.error((e as Error).message);
@@ -230,6 +242,15 @@ function OrdersPage() {
                         title="Editar comprovante"
                       >
                         <i className="fa-solid fa-pen" />
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button
+                        onClick={() => destroy(o.id)}
+                        className="ml-1 rounded border border-border px-2 py-1 text-xs hover:border-destructive hover:text-destructive"
+                        title="Apagar pedido"
+                      >
+                        <i className="fa-solid fa-trash" />
                       </button>
                     )}
                   </td>
