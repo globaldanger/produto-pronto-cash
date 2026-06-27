@@ -225,7 +225,7 @@ export const createPixCheckout = createServerFn({ method: "POST" })
       })
       .eq("id", order.id);
 
-    return { orderId: order.id };
+    return { orderId: order.id, redirectUrl: null as string | null };
   });
 
 export const checkPaymentStatus = createServerFn({ method: "POST" })
