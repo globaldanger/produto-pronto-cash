@@ -18,6 +18,8 @@ type Order = {
   pix_qr_code: string | null;
   pix_qr_code_base64: string | null;
   pix_expires_at: string | null;
+  payment_method: string | null;
+  mp_init_point: string | null;
 };
 
 function SuccessPage() {
@@ -31,7 +33,7 @@ function SuccessPage() {
     (async () => {
       const { data } = await supabase
         .from("orders")
-        .select("id,total,status,pix_qr_code,pix_qr_code_base64,pix_expires_at")
+        .select("id,total,status,pix_qr_code,pix_qr_code_base64,pix_expires_at,payment_method,mp_init_point")
         .eq("id", id)
         .maybeSingle();
       if (data) {
@@ -85,6 +87,25 @@ function SuccessPage() {
               >
                 <i className="fa-solid fa-print mr-1" /> Comprovante
               </a>
+            </div>
+          </div>
+        ) : order.payment_method === "card" ? (
+          <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-lg">
+            <i className="fa-solid fa-credit-card mb-4 text-6xl text-primary" />
+            <h1 className="text-2xl font-bold">Pagamento com cartão</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Clique abaixo para concluir o pagamento no Mercado Pago.
+            </p>
+            {order.mp_init_point && (
+              <a
+                href={order.mp_init_point}
+                className="mt-6 inline-block rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow hover:bg-primary/90"
+              >
+                <i className="fa-solid fa-lock mr-2" /> Pagar R$ {Number(order.total).toFixed(2)}
+              </a>
+            )}
+            <div className="mt-6 flex justify-center text-sm text-muted-foreground">
+              <i className="fa-solid fa-spinner fa-spin mr-2 text-primary" /> Aguardando confirmação...
             </div>
           </div>
         ) : (

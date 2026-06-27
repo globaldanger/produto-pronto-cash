@@ -133,9 +133,12 @@ export type Database = {
           customer_address: string | null
           customer_name: string | null
           customer_phone: string | null
+          delivery_type: string
           discount: number
           id: string
+          mp_init_point: string | null
           mp_payment_id: string | null
+          mp_preference_id: string | null
           notes: string | null
           paid_at: string | null
           payment_method: string | null
@@ -143,6 +146,13 @@ export type Database = {
           pix_qr_code: string | null
           pix_qr_code_base64: string | null
           refunded_at: string | null
+          shipping_cep: string | null
+          shipping_city: string | null
+          shipping_complement: string | null
+          shipping_neighborhood: string | null
+          shipping_number: string | null
+          shipping_state: string | null
+          shipping_street: string | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
           updated_at: string
@@ -155,9 +165,12 @@ export type Database = {
           customer_address?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivery_type?: string
           discount?: number
           id?: string
+          mp_init_point?: string | null
           mp_payment_id?: string | null
+          mp_preference_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_method?: string | null
@@ -165,6 +178,13 @@ export type Database = {
           pix_qr_code?: string | null
           pix_qr_code_base64?: string | null
           refunded_at?: string | null
+          shipping_cep?: string | null
+          shipping_city?: string | null
+          shipping_complement?: string | null
+          shipping_neighborhood?: string | null
+          shipping_number?: string | null
+          shipping_state?: string | null
+          shipping_street?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total: number
           updated_at?: string
@@ -177,9 +197,12 @@ export type Database = {
           customer_address?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          delivery_type?: string
           discount?: number
           id?: string
+          mp_init_point?: string | null
           mp_payment_id?: string | null
+          mp_preference_id?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_method?: string | null
@@ -187,6 +210,13 @@ export type Database = {
           pix_qr_code?: string | null
           pix_qr_code_base64?: string | null
           refunded_at?: string | null
+          shipping_cep?: string | null
+          shipping_city?: string | null
+          shipping_complement?: string | null
+          shipping_neighborhood?: string | null
+          shipping_number?: string | null
+          shipping_state?: string | null
+          shipping_street?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
           updated_at?: string
