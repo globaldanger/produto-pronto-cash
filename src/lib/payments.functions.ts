@@ -3,7 +3,21 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type CheckoutInput = {
   items: { productId: string; quantity: number }[];
-  customer: { name: string; phone: string; address?: string; notes?: string; email?: string };
+  customer: {
+    name: string;
+    phone: string;
+    email?: string;
+    notes?: string;
+    delivery_type: "delivery" | "pickup";
+    cep?: string;
+    street?: string;
+    number?: string;
+    complement?: string;
+    neighborhood?: string;
+    city?: string;
+    state?: string;
+  };
+  payment_method?: "pix" | "card";
 };
 
 export const createPixCheckout = createServerFn({ method: "POST" })
@@ -12,6 +26,10 @@ export const createPixCheckout = createServerFn({ method: "POST" })
     if (!data?.items?.length) throw new Error("Carrinho vazio");
     if (!data.customer?.name || !data.customer?.phone)
       throw new Error("Nome e telefone obrigatórios");
+    if (data.customer.delivery_type === "delivery") {
+      if (!data.customer.cep || !data.customer.street || !data.customer.number || !data.customer.city)
+        throw new Error("Endereço de entrega incompleto");
+    }
     return data;
   })
   .handler(async ({ data, context }) => {
@@ -56,18 +74,39 @@ export const createPixCheckout = createServerFn({ method: "POST" })
     }
 
     // Create order (pending)
+    const addrSummary =
+      data.customer.delivery_type === "pickup"
+        ? "Retirada na loja"
+        : [
+            `${data.customer.street}, ${data.customer.number}`,
+            data.customer.complement,
+            data.customer.neighborhood,
+            `${data.customer.city}/${data.customer.state ?? ""}`,
+            data.customer.cep ? `CEP ${data.customer.cep}` : null,
+          ]
+            .filter(Boolean)
+            .join(" — ");
+    const method = data.payment_method ?? "pix";
     const { data: order, error: oErr } = await supabase
       .from("orders")
       .insert({
         user_id: userId,
         customer_name: data.customer.name,
         customer_phone: data.customer.phone,
-        customer_address: data.customer.address ?? null,
+        customer_address: addrSummary,
         notes: data.customer.notes ?? null,
+        delivery_type: data.customer.delivery_type,
+        shipping_cep: data.customer.cep ?? null,
+        shipping_street: data.customer.street ?? null,
+        shipping_number: data.customer.number ?? null,
+        shipping_complement: data.customer.complement ?? null,
+        shipping_neighborhood: data.customer.neighborhood ?? null,
+        shipping_city: data.customer.city ?? null,
+        shipping_state: data.customer.state ?? null,
         total,
         status: "pending",
         channel: "online",
-        payment_method: "pix",
+        payment_method: method,
       })
       .select()
       .single();
@@ -78,7 +117,64 @@ export const createPixCheckout = createServerFn({ method: "POST" })
       .insert(orderItems.map((it) => ({ ...it, order_id: order.id })));
     if (iErr) throw iErr;
 
-    // Create Pix payment in Mercado Pago
+    if (method === "card") {
+      // Create Mercado Pago Checkout Pro preference (credit + debit)
+      const prefRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "X-Idempotency-Key": order.id,
+        },
+        body: JSON.stringify({
+          items: orderItems.map((it) => ({
+            title: it.product_name,
+            quantity: it.quantity,
+            unit_price: Number(Number(it.unit_price).toFixed(2)),
+            currency_id: "BRL",
+          })),
+          payer: {
+            name: data.customer.name,
+            email: data.customer.email || `cliente+${userId.slice(0, 8)}@smartcell.app`,
+          },
+          payment_methods: {
+            excluded_payment_types: [{ id: "ticket" }, { id: "atm" }],
+            installments: 12,
+          },
+          external_reference: order.id,
+          notification_url: `${process.env.SITE_URL ?? ""}/api/public/mp-webhook`,
+          back_urls: {
+            success: `${process.env.SITE_URL ?? ""}/checkout/sucesso/${order.id}`,
+            failure: `${process.env.SITE_URL ?? ""}/checkout/sucesso/${order.id}`,
+            pending: `${process.env.SITE_URL ?? ""}/checkout/sucesso/${order.id}`,
+          },
+          auto_return: "approved",
+        }),
+      });
+      const prefJson = (await prefRes.json()) as {
+        id?: string;
+        init_point?: string;
+        sandbox_init_point?: string;
+        message?: string;
+        cause?: { description: string }[];
+      };
+      if (!prefRes.ok || !prefJson.id) {
+        const msg = prefJson.message || prefJson.cause?.[0]?.description || "Erro Mercado Pago";
+        await supabaseAdmin
+          .from("orders")
+          .update({ status: "cancelled", cancel_reason: `MP: ${msg}` })
+          .eq("id", order.id);
+        throw new Error(msg);
+      }
+      const init = prefJson.init_point ?? prefJson.sandbox_init_point ?? null;
+      await supabaseAdmin
+        .from("orders")
+        .update({ mp_preference_id: prefJson.id, mp_init_point: init })
+        .eq("id", order.id);
+      return { orderId: order.id, redirectUrl: init };
+    }
+
+    // Pix flow
     const mpRes = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
       headers: {
