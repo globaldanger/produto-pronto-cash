@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RastrearRouteImport } from './routes/rastrear'
 import { Route as MeusPedidosRouteImport } from './routes/meus-pedidos'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -33,6 +34,11 @@ import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminBackupRouteImport } from './routes/_authenticated/admin.backup'
 import { Route as AuthenticatedAdminAboutRouteImport } from './routes/_authenticated/admin.about'
 
+const RastrearRoute = RastrearRouteImport.update({
+  id: '/rastrear',
+  path: '/rastrear',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MeusPedidosRoute = MeusPedidosRouteImport.update({
   id: '/meus-pedidos',
   path: '/meus-pedidos',
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/meus-pedidos': typeof MeusPedidosRouteWithChildren
+  '/rastrear': typeof RastrearRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/meus-pedidos': typeof MeusPedidosRouteWithChildren
+  '/rastrear': typeof RastrearRoute
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/meus-pedidos': typeof MeusPedidosRouteWithChildren
+  '/rastrear': typeof RastrearRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/meus-pedidos'
+    | '/rastrear'
     | '/admin'
     | '/comprovante/$id'
     | '/meus-pedidos/$id'
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/meus-pedidos'
+    | '/rastrear'
     | '/comprovante/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/meus-pedidos'
+    | '/rastrear'
     | '/_authenticated/admin'
     | '/comprovante/$id'
     | '/meus-pedidos/$id'
@@ -309,6 +321,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
   MeusPedidosRoute: typeof MeusPedidosRouteWithChildren
+  RastrearRoute: typeof RastrearRoute
   ComprovanteIdRoute: typeof ComprovanteIdRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
@@ -316,6 +329,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/rastrear': {
+      id: '/rastrear'
+      path: '/rastrear'
+      fullPath: '/rastrear'
+      preLoaderRoute: typeof RastrearRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/meus-pedidos': {
       id: '/meus-pedidos'
       path: '/meus-pedidos'
@@ -554,6 +574,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
   MeusPedidosRoute: MeusPedidosRouteWithChildren,
+  RastrearRoute: RastrearRoute,
   ComprovanteIdRoute: ComprovanteIdRoute,
   ProdutoIdRoute: ProdutoIdRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,

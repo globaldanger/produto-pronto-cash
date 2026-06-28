@@ -13,6 +13,21 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
+function maskCep(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}
+function maskPhone(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+function onlyDigits(v: string, max = 10) {
+  return v.replace(/\D/g, "").slice(0, max);
+}
+
 function CheckoutPage() {
   const navigate = useNavigate();
   const { items, total, clear, setQty, remove } = useCart();
@@ -85,18 +100,30 @@ function CheckoutPage() {
   }
 
   async function pay() {
-    if (!form.name || !form.phone) return toast.error("Preencha nome e telefone");
     if (items.length === 0) return toast.error("Carrinho vazio");
+    if (!form.name.trim()) return toast.error("Informe seu nome completo");
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (phoneDigits.length < 10 || phoneDigits.length > 11)
+      return toast.error("Telefone inválido (use DDD + número)");
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+      return toast.error("E-mail inválido");
+    if (form.delivery_type !== "delivery" && form.delivery_type !== "pickup")
+      return toast.error("Selecione entrega ou retirada");
     if (form.delivery_type === "delivery") {
-      if (!form.cep || !form.street || !form.number || !form.city)
-        return toast.error("Preencha CEP, rua, número e cidade");
+      const cepDigits = form.cep.replace(/\D/g, "");
+      if (cepDigits.length !== 8) return toast.error("CEP inválido");
+      if (!form.street.trim()) return toast.error("Informe a rua");
+      if (!form.number.trim() || !/^\d+$/.test(form.number))
+        return toast.error("Informe o número da casa (apenas dígitos)");
+      if (!form.city.trim()) return toast.error("Informe a cidade");
+      if (!form.state || form.state.length !== 2) return toast.error("Informe a UF (2 letras)");
     }
     setLoading(true);
     try {
       const res = await submit({
         data: {
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
-          customer: form,
+          customer: { ...form, phone: phoneDigits, cep: form.cep.replace(/\D/g, "") },
           payment_method: payment,
         },
       });
@@ -159,7 +186,13 @@ function CheckoutPage() {
                   <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </Field>
                 <Field label="Telefone / WhatsApp *">
-                  <input className="input" placeholder="(00) 00000-0000" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <input
+                    className="input"
+                    placeholder="(00) 00000-0000"
+                    inputMode="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: maskPhone(e.target.value) })}
+                  />
                 </Field>
                 <div className="md:col-span-2">
                   <Field label="E-mail">
@@ -179,8 +212,13 @@ function CheckoutPage() {
                           className="input pr-9"
                           placeholder="00000-000"
                           value={form.cep}
-                          onChange={(e) => setForm({ ...form, cep: e.target.value })}
+                          onChange={(e) => {
+                            const masked = maskCep(e.target.value);
+                            setForm({ ...form, cep: masked });
+                            if (masked.replace(/\D/g, "").length === 8) lookupCep(masked);
+                          }}
                           onBlur={(e) => lookupCep(e.target.value)}
+                          inputMode="numeric"
                           maxLength={9}
                         />
                         {cepLoading && <i className="fa-solid fa-spinner fa-spin absolute right-3 top-2.5 text-primary" />}
@@ -194,7 +232,13 @@ function CheckoutPage() {
                   </div>
                   <div className="md:col-span-2">
                     <Field label="Número *">
-                      <input className="input" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
+                      <input
+                        className="input"
+                        inputMode="numeric"
+                        placeholder="123"
+                        value={form.number}
+                        onChange={(e) => setForm({ ...form, number: onlyDigits(e.target.value, 6) })}
+                      />
                     </Field>
                   </div>
                   <div className="md:col-span-4">

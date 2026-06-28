@@ -61,6 +61,12 @@ export function StoreHeader() {
           <div className="md:hidden">
             <StoreSearch compact />
           </div>
+          <Link
+            to="/rastrear"
+            className="hidden rounded-md border border-border px-3 py-2 hover:border-primary hover:text-primary sm:inline"
+          >
+            <i className="fa-solid fa-magnifying-glass-location mr-1" /> Rastrear
+          </Link>
           <button
             onClick={() => toggleCart(true)}
             className="relative rounded-md border border-border px-3 py-2 hover:border-primary hover:text-primary"
