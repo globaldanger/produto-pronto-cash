@@ -13,6 +13,21 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
+function maskCep(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}
+function maskPhone(v: string) {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+function onlyDigits(v: string, max = 10) {
+  return v.replace(/\D/g, "").slice(0, max);
+}
+
 function CheckoutPage() {
   const navigate = useNavigate();
   const { items, total, clear, setQty, remove } = useCart();
