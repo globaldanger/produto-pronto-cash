@@ -159,7 +159,13 @@ function CheckoutPage() {
                   <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </Field>
                 <Field label="Telefone / WhatsApp *">
-                  <input className="input" placeholder="(00) 00000-0000" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <input
+                    className="input"
+                    placeholder="(00) 00000-0000"
+                    inputMode="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: maskPhone(e.target.value) })}
+                  />
                 </Field>
                 <div className="md:col-span-2">
                   <Field label="E-mail">
