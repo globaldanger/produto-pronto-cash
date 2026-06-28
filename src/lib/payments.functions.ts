@@ -117,8 +117,14 @@ export const createPixCheckout = createServerFn({ method: "POST" })
       .insert(orderItems.map((it) => ({ ...it, order_id: order.id })));
     if (iErr) throw iErr;
 
-    if (method === "card") {
-      // Create Mercado Pago Checkout Pro preference (credit + debit)
+    // Both Pix and Card use Checkout Pro (hosted checkout). This works in any
+    // hosting environment (Netlify, InfinityFree, Cloudflare, etc.) since the
+    // customer is redirected to mercadopago.com to pay.
+    {
+      const excluded =
+        method === "pix"
+          ? [{ id: "credit_card" }, { id: "debit_card" }, { id: "ticket" }, { id: "atm" }]
+          : [{ id: "ticket" }, { id: "atm" }];
       const prefRes = await fetch("https://api.mercadopago.com/checkout/preferences", {
         method: "POST",
         headers: {
@@ -138,8 +144,8 @@ export const createPixCheckout = createServerFn({ method: "POST" })
             email: data.customer.email || `cliente+${userId.slice(0, 8)}@smartcell.app`,
           },
           payment_methods: {
-            excluded_payment_types: [{ id: "ticket" }, { id: "atm" }],
-            installments: 12,
+            excluded_payment_types: excluded,
+            installments: method === "card" ? 12 : 1,
           },
           external_reference: order.id,
           notification_url: `${process.env.SITE_URL ?? ""}/api/public/mp-webhook`,
@@ -173,59 +179,6 @@ export const createPixCheckout = createServerFn({ method: "POST" })
         .eq("id", order.id);
       return { orderId: order.id, redirectUrl: init };
     }
-
-    // Pix flow
-    const mpRes = await fetch("https://api.mercadopago.com/v1/payments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "X-Idempotency-Key": order.id,
-      },
-      body: JSON.stringify({
-        transaction_amount: Number(total.toFixed(2)),
-        description: `Pedido #${order.id.slice(0, 8)} — ${settings?.store_name ?? "Loja"}`,
-        payment_method_id: "pix",
-        external_reference: order.id,
-        payer: {
-          email: data.customer.email || `cliente+${userId.slice(0, 8)}@smartcell.app`,
-          first_name: data.customer.name.split(" ")[0],
-          last_name: data.customer.name.split(" ").slice(1).join(" ") || "Cliente",
-        },
-      }),
-    });
-    const mpJson = (await mpRes.json()) as {
-      id?: number;
-      status?: string;
-      point_of_interaction?: {
-        transaction_data?: { qr_code?: string; qr_code_base64?: string };
-      };
-      message?: string;
-      cause?: { description: string }[];
-    };
-    if (!mpRes.ok || !mpJson.id) {
-      const msg = mpJson.message || mpJson.cause?.[0]?.description || "Erro Mercado Pago";
-      await supabaseAdmin
-        .from("orders")
-        .update({ status: "cancelled", cancel_reason: `MP: ${msg}` })
-        .eq("id", order.id);
-      throw new Error(msg);
-    }
-
-    const qr = mpJson.point_of_interaction?.transaction_data?.qr_code ?? null;
-    const qrB64 = mpJson.point_of_interaction?.transaction_data?.qr_code_base64 ?? null;
-    const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-    await supabaseAdmin
-      .from("orders")
-      .update({
-        mp_payment_id: String(mpJson.id),
-        pix_qr_code: qr,
-        pix_qr_code_base64: qrB64,
-        pix_expires_at: expires,
-      })
-      .eq("id", order.id);
-
-    return { orderId: order.id, redirectUrl: null as string | null };
   });
 
 export const checkPaymentStatus = createServerFn({ method: "POST" })
