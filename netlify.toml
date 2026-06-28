@@ -1,0 +1,20 @@
+# Netlify deploy configuration for TanStack Start (via Nitro)
+# Connect this repo on Netlify, set the env vars below, and deploy.
+
+[build]
+  command = "bun run build"
+  publish = "dist"
+
+[build.environment]
+  NITRO_PRESET = "netlify"
+  NODE_VERSION = "20"
+
+# Nitro's netlify preset emits a catch-all function — no manual redirects needed.
+# Required runtime env vars to set in Netlify > Site settings > Environment:
+#   SUPABASE_URL
+#   SUPABASE_PUBLISHABLE_KEY
+#   SUPABASE_SERVICE_ROLE_KEY
+#   VITE_SUPABASE_URL
+#   VITE_SUPABASE_PUBLISHABLE_KEY
+#   VITE_SUPABASE_PROJECT_ID
+#   SITE_URL  (ex.: https://seusite.netlify.app)
