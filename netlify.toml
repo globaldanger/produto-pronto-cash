@@ -1,5 +1,4 @@
 # Netlify deploy configuration for TanStack Start (via Nitro)
-# Connect this repo on Netlify, set the env vars below, and deploy.
 
 [build]
   command = "bun run build"
@@ -9,12 +8,18 @@
   NITRO_PRESET = "netlify"
   NODE_VERSION = "20"
 
-# Nitro's netlify preset emits a catch-all function — no manual redirects needed.
-# Required runtime env vars to set in Netlify > Site settings > Environment:
-#   SUPABASE_URL
-#   SUPABASE_PUBLISHABLE_KEY
-#   SUPABASE_SERVICE_ROLE_KEY
-#   VITE_SUPABASE_URL
-#   VITE_SUPABASE_PUBLISHABLE_KEY
-#   VITE_SUPABASE_PROJECT_ID
-#   SITE_URL  (ex.: https://seusite.netlify.app)
+  # Supabase public config (safe to commit — same values are in .env and shipped in the client bundle).
+  # Injected at build time AND available to Netlify Functions at runtime.
+  SUPABASE_URL = "https://dcuawyvrxybymelxwbrz.supabase.co"
+  SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjdWF3eXZyeHlieW1lbHh3YnJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MTE0MDIsImV4cCI6MjA5Nzk4NzQwMn0.fht6htOteIBsLH_hRMZ0fCFum5zbJljAWkhZ3R3gTWI"
+  SUPABASE_PROJECT_ID = "dcuawyvrxybymelxwbrz"
+  VITE_SUPABASE_URL = "https://dcuawyvrxybymelxwbrz.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjdWF3eXZyeHlieW1lbHh3YnJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MTE0MDIsImV4cCI6MjA5Nzk4NzQwMn0.fht6htOteIBsLH_hRMZ0fCFum5zbJljAWkhZ3R3gTWI"
+  VITE_SUPABASE_PROJECT_ID = "dcuawyvrxybymelxwbrz"
+
+# ------------------------------------------------------------------
+# ⚠️ Adicione MANUALMENTE em Netlify → Site settings → Environment variables:
+#   SUPABASE_SERVICE_ROLE_KEY  (pegue no painel Backend da Lovable)
+#   SITE_URL                   (ex.: https://seusite.netlify.app — usado pelo Mercado Pago)
+# Depois: Deploys → Trigger deploy → Clear cache and deploy site.
+# ------------------------------------------------------------------
