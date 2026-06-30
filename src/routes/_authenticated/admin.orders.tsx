@@ -110,7 +110,7 @@ function OrdersPage() {
 
   async function verify(id: string) {
     try {
-      const r = await doVerify({ data: { orderId: id } });
+      const r: { status: string; info?: string } = await doVerify({ data: { orderId: id } });
       if (r.status === "paid") toast.success(r.info ?? "Pagamento confirmado");
       else toast.info(r.info ?? `Status: ${r.status}`);
       qc.invalidateQueries({ queryKey: ["admin", "orders"] });
