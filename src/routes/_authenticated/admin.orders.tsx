@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { cancelOrder, refundOrder, deleteOrder } from "@/lib/payments.functions";
+import { cancelOrder, refundOrder, deleteOrder, verifyOrderPayment } from "@/lib/payments.functions";
 import { updateOrderItems } from "@/lib/admin.functions";
 import { usePermissions } from "@/lib/permissions";
 
@@ -46,6 +46,7 @@ function OrdersPage() {
   const doRefund = useServerFn(refundOrder);
   const doUpdate = useServerFn(updateOrderItems);
   const doDelete = useServerFn(deleteOrder);
+  const doVerify = useServerFn(verifyOrderPayment);
   const { isAdmin } = usePermissions();
   const [editing, setEditing] = useState<string | null>(null);
   const [editItems, setEditItems] = useState<{ product_id: string; product_name: string; quantity: number; unit_price: number }[]>([]);
@@ -101,6 +102,17 @@ function OrdersPage() {
     try {
       await doDelete({ data: { orderId: id } });
       toast.success("Pedido apagado");
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function verify(id: string) {
+    try {
+      const r = await doVerify({ data: { orderId: id } });
+      if (r.status === "paid") toast.success(r.info ?? "Pagamento confirmado");
+      else toast.info(r.info ?? `Status: ${r.status}`);
       qc.invalidateQueries({ queryKey: ["admin", "orders"] });
     } catch (e) {
       toast.error((e as Error).message);
@@ -224,6 +236,15 @@ function OrdersPage() {
                         title="Cancelar"
                       >
                         <i className="fa-solid fa-ban" />
+                      </button>
+                    )}
+                    {o.status === "pending" && o.channel === "online" && (
+                      <button
+                        onClick={() => verify(o.id)}
+                        className="mr-1 rounded border border-border px-2 py-1 text-xs hover:border-success hover:text-success"
+                        title="Verificar pagamento no Mercado Pago"
+                      >
+                        <i className="fa-solid fa-circle-check" />
                       </button>
                     )}
                     {o.status === "paid" || o.status === "shipped" || o.status === "delivered" ? (
