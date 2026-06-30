@@ -214,6 +214,85 @@ export const checkPaymentStatus = createServerFn({ method: "POST" })
     return { status: order.status };
   });
 
+export const verifyOrderPayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { orderId: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    const { data: isFunc } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "funcionario",
+    });
+    if (!isAdmin && !isFunc) throw new Error("Sem permissão");
+
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select("id,status,mp_payment_id")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (!order) throw new Error("Pedido não encontrado");
+    if (order.status === "paid") return { status: "paid" as const, info: "Pedido já estava pago" };
+
+    const { data: settings } = await supabaseAdmin
+      .from("store_settings")
+      .select("mercadopago_access_token")
+      .limit(1)
+      .maybeSingle();
+    const token = settings?.mercadopago_access_token?.trim();
+    if (!token) throw new Error("Mercado Pago não configurado");
+
+    // Try direct payment id first; otherwise search by external_reference
+    let status: string | undefined;
+    let paymentId: string | undefined = order.mp_payment_id ?? undefined;
+
+    if (paymentId) {
+      const r = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const j = (await r.json()) as { status?: string };
+      status = j.status;
+    } else {
+      const r = await fetch(
+        `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(order.id)}&sort=date_created&criteria=desc&limit=10`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const j = (await r.json()) as { results?: { id: number; status: string }[] };
+      const approved = j.results?.find((p) => p.status === "approved");
+      const last = approved ?? j.results?.[0];
+      if (last) {
+        paymentId = String(last.id);
+        status = last.status;
+      }
+    }
+
+    if (paymentId) {
+      await supabaseAdmin.from("orders").update({ mp_payment_id: paymentId }).eq("id", order.id);
+    }
+
+    if (status === "approved") {
+      await supabaseAdmin
+        .from("orders")
+        .update({ status: "paid", paid_at: new Date().toISOString() })
+        .eq("id", order.id);
+      const { data: items } = await supabaseAdmin
+        .from("order_items")
+        .select("product_id,quantity")
+        .eq("order_id", order.id);
+      for (const it of items ?? []) {
+        await supabaseAdmin.rpc("decrement_stock", {
+          _product_id: it.product_id,
+          _qty: it.quantity,
+        });
+      }
+      return { status: "paid" as const, info: "Pagamento confirmado e estoque atualizado" };
+    }
+    return { status: order.status, info: `Mercado Pago: ${status ?? "nenhum pagamento encontrado"}` };
+  });
+
 async function markOrderPaid(orderId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   await supabaseAdmin
