@@ -5,13 +5,45 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = (await request.json().catch(() => ({}))) as {
-            data?: { id?: string | number };
-            type?: string;
-            action?: string;
-          };
-          const paymentId = body?.data?.id ? String(body.data.id) : null;
+          // Read raw body once so we can both parse it and use it for
+          // signature reconstruction if needed.
+          const rawBody = await request.text();
+          let parsed: { data?: { id?: string | number }; type?: string; action?: string } = {};
+          try { parsed = rawBody ? JSON.parse(rawBody) : {}; } catch { /* ignore */ }
+          const paymentId = parsed?.data?.id ? String(parsed.data.id) : null;
           if (!paymentId) return new Response("ignored", { status: 200 });
+
+          // Verify Mercado Pago signature to prevent unauthenticated actors
+          // from triggering payment processing / MP API abuse.
+          // https://www.mercadopago.com.br/developers/en/docs/your-integrations/notifications/webhooks
+          const secret = process.env.MP_WEBHOOK_SECRET;
+          if (!secret) {
+            console.warn("[mp-webhook] MP_WEBHOOK_SECRET not configured; refusing to process");
+            return new Response("not configured", { status: 200 });
+          }
+          const sigHeader = request.headers.get("x-signature") ?? "";
+          const reqId = request.headers.get("x-request-id") ?? "";
+          const parts: Record<string, string> = {};
+          for (const seg of sigHeader.split(",")) {
+            const idx = seg.indexOf("=");
+            if (idx > 0) parts[seg.slice(0, idx).trim()] = seg.slice(idx + 1).trim();
+          }
+          const ts = parts.ts;
+          const v1 = parts.v1;
+          if (!ts || !v1 || !reqId) return new Response("missing signature", { status: 200 });
+          // Reject stale signatures (>5 min) to blunt replay abuse.
+          const tsNum = Number(ts);
+          if (!Number.isFinite(tsNum) || Math.abs(Date.now() - tsNum) > 5 * 60 * 1000) {
+            return new Response("stale", { status: 200 });
+          }
+          const manifest = `id:${paymentId};request-id:${reqId};ts:${ts};`;
+          const { createHmac, timingSafeEqual } = await import("crypto");
+          const expected = createHmac("sha256", secret).update(manifest).digest("hex");
+          const a = Buffer.from(expected);
+          const b = Buffer.from(v1);
+          if (a.length !== b.length || !timingSafeEqual(a, b)) {
+            return new Response("invalid signature", { status: 200 });
+          }
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
