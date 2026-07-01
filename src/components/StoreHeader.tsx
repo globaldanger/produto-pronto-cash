@@ -157,14 +157,13 @@ export function StoreHeader() {
                     </div>
                   </div>
                   <div className="p-1">
-                    <MenuItem to="/meus-pedidos" icon="fa-receipt" label="Meus pedidos" desc="Acompanhe suas compras" onClick={() => setMenuOpen(false)} />
-                    <MenuItem to="/minha-conta/favoritos" icon="fa-heart" label="Favoritos" desc="Produtos salvos" onClick={() => setMenuOpen(false)} />
-                    <MenuItem to="/minha-conta/enderecos" icon="fa-location-dot" label="Meus endereços" desc="Entrega mais rápida" onClick={() => setMenuOpen(false)} />
-                    <MenuItem to="/minha-conta/perfil" icon="fa-user" label="Meu perfil" desc="Dados pessoais" onClick={() => setMenuOpen(false)} />
-                    <MenuItem to="/rastrear" icon="fa-truck" label="Rastrear pedido" desc="Consultar por código" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/meus-pedidos" icon="fa-receipt" label="Meus pedidos" desc="Acompanhe suas compras" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/meus-pedidos" icon="fa-heart" label="Favoritos" desc="Produtos salvos (em breve)" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/meus-pedidos" icon="fa-location-dot" label="Meus endereços" desc="Entrega mais rápida" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/rastrear" icon="fa-truck" label="Rastrear pedido" desc="Consultar por código" onClick={() => setMenuOpen(false)} />
                   </div>
                   <div className="border-t border-border/60 p-1">
-                    <MenuItem to="/admin" icon="fa-shield-halved" label="Painel admin" desc="Área da equipe" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/admin" icon="fa-shield-halved" label="Painel admin" desc="Área da equipe" onClick={() => setMenuOpen(false)} />
                     <button
                       onClick={async () => { setMenuOpen(false); await supabase.auth.signOut(); }}
                       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-destructive hover:bg-destructive/10"
@@ -190,10 +189,10 @@ export function StoreHeader() {
   );
 }
 
-function MenuItem({ to, icon, label, desc, onClick }: { to: string; icon: string; label: string; desc: string; onClick: () => void }) {
+function MenuItem({ href, icon, label, desc, onClick }: { href: string; icon: string; label: string; desc: string; onClick: () => void }) {
   return (
-    <Link
-      to={to}
+    <a
+      href={href}
       onClick={onClick}
       className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition hover:bg-surface"
     >
@@ -205,6 +204,6 @@ function MenuItem({ to, icon, label, desc, onClick }: { to: string; icon: string
         <span className="block text-xs text-muted-foreground">{desc}</span>
       </span>
       <i className="fa-solid fa-chevron-right text-[10px] text-muted-foreground" />
-    </Link>
+    </a>
   );
 }
