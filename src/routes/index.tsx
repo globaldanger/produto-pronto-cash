@@ -50,7 +50,7 @@ function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select("id,name,description,price,sale_price,stock,images,category_id,featured,active,created_at")
         .eq("active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
