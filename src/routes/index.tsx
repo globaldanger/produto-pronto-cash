@@ -206,16 +206,16 @@ function Index() {
           <SectionHeader eyebrow="Navegue" title="Categorias" />
           <div className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
             {categories.map((c) => (
-              <Link
+              <a
                 key={c.id}
-                to="/categoria/$slug" params={{ slug: c.slug }}
+                href={`/#produtos`}
                 className="card-hover group flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card p-5"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 theme-accent-text text-xl">
                   <i className={`fa-solid ${c.icon ?? "fa-tag"}`} />
                 </div>
                 <span className="text-center text-xs font-medium">{c.name}</span>
-              </Link>
+              </a>
             ))}
           </div>
         </section>
