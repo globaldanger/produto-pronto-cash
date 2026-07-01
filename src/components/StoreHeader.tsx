@@ -50,23 +50,22 @@ export function StoreHeader() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name,avatar_url")
+        .select("full_name")
         .eq("id", user!.id)
         .maybeSingle();
       return data;
     },
   });
 
-  const { data: pointsRow } = useQuery({
+  const { data: pointsBalance = 0 } = useQuery({
     queryKey: ["points_menu", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from("loyalty_points")
-        .select("balance")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-      return data;
+        .select("points")
+        .eq("user_id", user!.id);
+      return (data ?? []).reduce((s, r) => s + Number(r.points || 0), 0);
     },
   });
 
@@ -154,9 +153,7 @@ export function StoreHeader() {
                     </div>
                     <div className="mt-3 flex items-center justify-between rounded-lg border border-border/50 bg-background/60 px-3 py-2">
                       <span className="eyebrow">Pontos fidelidade</span>
-                      <span className="text-lg font-bold theme-accent-text">
-                        {pointsRow?.balance ?? 0}
-                      </span>
+                      <span className="text-lg font-bold theme-accent-text">{pointsBalance}</span>
                     </div>
                   </div>
                   <div className="p-1">
