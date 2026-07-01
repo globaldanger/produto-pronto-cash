@@ -41,6 +41,141 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          created_at: string
+          discount: number
+          id: string
+          order_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string
+          discount?: number
+          id?: string
+          order_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string
+          discount?: number
+          id?: string
+          order_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          min_order: number
+          type: Database["public"]["Enums"]["coupon_type"]
+          updated_at: string
+          uses: number
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_order?: number
+          type?: Database["public"]["Enums"]["coupon_type"]
+          updated_at?: string
+          uses?: number
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_order?: number
+          type?: Database["public"]["Enums"]["coupon_type"]
+          updated_at?: string
+          uses?: number
+          value?: number
+        }
+        Relationships: []
+      }
+      customer_addresses: {
+        Row: {
+          cep: string
+          city: string
+          complement: string | null
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string | null
+          neighborhood: string | null
+          number: string
+          state: string
+          street: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cep: string
+          city: string
+          complement?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          neighborhood?: string | null
+          number: string
+          state: string
+          street: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cep?: string
+          city?: string
+          complement?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string | null
+          neighborhood?: string | null
+          number?: string
+          state?: string
+          street?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
@@ -76,6 +211,70 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_points: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          points: number
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          points: number
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          points?: number
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_points_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_items: {
         Row: {
@@ -129,13 +328,16 @@ export type Database = {
         Row: {
           cancel_reason: string | null
           channel: string
+          coupon_code: string | null
           created_at: string
           customer_address: string | null
           customer_name: string | null
           customer_phone: string | null
           delivery_type: string
           discount: number
+          discount_coupon: number
           id: string
+          kanban_status: string
           mp_init_point: string | null
           mp_payment_id: string | null
           mp_preference_id: string | null
@@ -145,10 +347,13 @@ export type Database = {
           pix_expires_at: string | null
           pix_qr_code: string | null
           pix_qr_code_base64: string | null
+          points_earned: number
+          points_used: number
           refunded_at: string | null
           shipping_cep: string | null
           shipping_city: string | null
           shipping_complement: string | null
+          shipping_fee: number
           shipping_neighborhood: string | null
           shipping_number: string | null
           shipping_state: string | null
@@ -161,13 +366,16 @@ export type Database = {
         Insert: {
           cancel_reason?: string | null
           channel?: string
+          coupon_code?: string | null
           created_at?: string
           customer_address?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_type?: string
           discount?: number
+          discount_coupon?: number
           id?: string
+          kanban_status?: string
           mp_init_point?: string | null
           mp_payment_id?: string | null
           mp_preference_id?: string | null
@@ -177,10 +385,13 @@ export type Database = {
           pix_expires_at?: string | null
           pix_qr_code?: string | null
           pix_qr_code_base64?: string | null
+          points_earned?: number
+          points_used?: number
           refunded_at?: string | null
           shipping_cep?: string | null
           shipping_city?: string | null
           shipping_complement?: string | null
+          shipping_fee?: number
           shipping_neighborhood?: string | null
           shipping_number?: string | null
           shipping_state?: string | null
@@ -193,13 +404,16 @@ export type Database = {
         Update: {
           cancel_reason?: string | null
           channel?: string
+          coupon_code?: string | null
           created_at?: string
           customer_address?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_type?: string
           discount?: number
+          discount_coupon?: number
           id?: string
+          kanban_status?: string
           mp_init_point?: string | null
           mp_payment_id?: string | null
           mp_preference_id?: string | null
@@ -209,10 +423,13 @@ export type Database = {
           pix_expires_at?: string | null
           pix_qr_code?: string | null
           pix_qr_code_base64?: string | null
+          points_earned?: number
+          points_used?: number
           refunded_at?: string | null
           shipping_cep?: string | null
           shipping_city?: string | null
           shipping_complement?: string | null
+          shipping_fee?: number
           shipping_neighborhood?: string | null
           shipping_number?: string | null
           shipping_state?: string | null
@@ -223,6 +440,63 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      product_reviews: {
+        Row: {
+          approved: boolean
+          comment: string | null
+          created_at: string
+          customer_name: string | null
+          id: string
+          order_id: string | null
+          product_id: string
+          rating: number
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean
+          comment?: string | null
+          created_at?: string
+          customer_name?: string | null
+          id?: string
+          order_id?: string | null
+          product_id: string
+          rating: number
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved?: boolean
+          comment?: string | null
+          created_at?: string
+          customer_name?: string | null
+          id?: string
+          order_id?: string | null
+          product_id?: string
+          rating?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -238,6 +512,7 @@ export type Database = {
           price: number
           sale_price: number | null
           stock: number
+          tags: string[]
           updated_at: string
         }
         Insert: {
@@ -253,6 +528,7 @@ export type Database = {
           price: number
           sale_price?: number | null
           stock?: number
+          tags?: string[]
           updated_at?: string
         }
         Update: {
@@ -268,6 +544,7 @@ export type Database = {
           price?: number
           sale_price?: number | null
           stock?: number
+          tags?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -304,6 +581,42 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_rates: {
+        Row: {
+          active: boolean
+          cep_from: string
+          cep_to: string
+          created_at: string
+          days: number
+          id: string
+          label: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          cep_from: string
+          cep_to: string
+          created_at?: string
+          days?: number
+          id?: string
+          label: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          cep_from?: string
+          cep_to?: string
+          created_at?: string
+          days?: number
+          id?: string
+          label?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       store_settings: {
         Row: {
           about_gallery: string[]
@@ -318,6 +631,7 @@ export type Database = {
           about_stat4_number: string | null
           about_text1: string | null
           about_text2: string | null
+          active_theme_key: string
           faq: Json
           footer_links: Json
           footer_payment_methods: string | null
@@ -327,6 +641,8 @@ export type Database = {
           home_hero_subtitle: string | null
           home_hero_title: string | null
           id: string
+          loyalty_points_per_real: number
+          loyalty_real_per_point: number
           mercadopago_access_token: string | null
           pix_key: string | null
           product_page_extra_info: string | null
@@ -346,6 +662,7 @@ export type Database = {
           store_slogan: string | null
           store_whatsapp: string | null
           support_image: string | null
+          theme_expires_at: string | null
           updated_at: string
         }
         Insert: {
@@ -361,6 +678,7 @@ export type Database = {
           about_stat4_number?: string | null
           about_text1?: string | null
           about_text2?: string | null
+          active_theme_key?: string
           faq?: Json
           footer_links?: Json
           footer_payment_methods?: string | null
@@ -370,6 +688,8 @@ export type Database = {
           home_hero_subtitle?: string | null
           home_hero_title?: string | null
           id?: string
+          loyalty_points_per_real?: number
+          loyalty_real_per_point?: number
           mercadopago_access_token?: string | null
           pix_key?: string | null
           product_page_extra_info?: string | null
@@ -389,6 +709,7 @@ export type Database = {
           store_slogan?: string | null
           store_whatsapp?: string | null
           support_image?: string | null
+          theme_expires_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -404,6 +725,7 @@ export type Database = {
           about_stat4_number?: string | null
           about_text1?: string | null
           about_text2?: string | null
+          active_theme_key?: string
           faq?: Json
           footer_links?: Json
           footer_payment_methods?: string | null
@@ -413,6 +735,8 @@ export type Database = {
           home_hero_subtitle?: string | null
           home_hero_title?: string | null
           id?: string
+          loyalty_points_per_real?: number
+          loyalty_real_per_point?: number
           mercadopago_access_token?: string | null
           pix_key?: string | null
           product_page_extra_info?: string | null
@@ -432,7 +756,47 @@ export type Database = {
           store_slogan?: string | null
           store_whatsapp?: string | null
           support_image?: string | null
+          theme_expires_at?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      theme_packs: {
+        Row: {
+          accent_color: string
+          accent_glow: string
+          active: boolean
+          banner_subtext: string | null
+          banner_text: string | null
+          created_at: string
+          decoration: string
+          id: string
+          key: string
+          name: string
+        }
+        Insert: {
+          accent_color?: string
+          accent_glow?: string
+          active?: boolean
+          banner_subtext?: string | null
+          banner_text?: string | null
+          created_at?: string
+          decoration?: string
+          id?: string
+          key: string
+          name: string
+        }
+        Update: {
+          accent_color?: string
+          accent_glow?: string
+          active?: boolean
+          banner_subtext?: string | null
+          banner_text?: string | null
+          created_at?: string
+          decoration?: string
+          id?: string
+          key?: string
+          name?: string
         }
         Relationships: []
       }
@@ -480,6 +844,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "cliente" | "funcionario"
+      coupon_type: "percent" | "fixed" | "free_shipping"
       order_status:
         | "pending"
         | "paid"
@@ -615,6 +980,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "cliente", "funcionario"],
+      coupon_type: ["percent", "fixed", "free_shipping"],
       order_status: [
         "pending",
         "paid",
