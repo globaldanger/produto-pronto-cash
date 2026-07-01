@@ -1,89 +1,56 @@
-# Plano — Conteúdo do site, Busca, Papéis, Backup e Comprovante editável
+# Repaginação profissional SmartCell
 
-Tudo em uma rodada, dividido em 5 blocos.
+Escopo grande dividido em 4 blocos entregues em sequência. Você aprova o plano e eu executo tudo.
 
----
+## 1. Design editorial-luxo (fundação visual)
 
-## Bloco 1 — CMS "Conteúdo do site" no admin
+Tipografia nova: **Instrument Serif** nos títulos + **Work Sans** no corpo. Paleta atual (preto/dourado) mantida, mas refinada com tokens semânticos consistentes, sombras suaves, espaçamento generoso e microinterações.
 
-Nova seção lateral **Conteúdo** com 4 abas, separada de Configurações (que fica só pra dados da loja + pagamento).
+- Header fixo com blur, logo centralizada, menu superior enxuto (Loja / Sobre / Meus pedidos / Rastrear).
+- **Menu do cliente** redesenhado: dropdown premium com avatar, atalhos (Meus pedidos, Endereços, Favoritos, Sair), badges de status.
+- Home reorganizada em bandas full-width: hero editorial → categorias em bento → destaques → depoimentos → sobre → FAQ → footer rico.
+- Cards de produto com hover suave, badge de tag, preço em display serif.
+- Página do produto com galeria zoom, breadcrumb, aba de descrição/especificações/frete, produtos relacionados.
+- Checkout e comprovante repaginados no mesmo idioma visual.
 
-**Schema** (1 migração — adiciona colunas em `store_settings`):
-- Home: `home_hero_title`, `home_hero_subtitle`, `home_hero_cta`, `home_banners` (jsonb[] com `{image, title, link}`).
-- Sobre: já existem (`about_text1/2`, `about_hero_image`, `about_gallery`) — só ganha UI melhor.
-- Produto: `product_page_shipping_text`, `product_page_warranty_text`, `product_page_extra_info` (textos que aparecem em todo produto).
-- FAQ: `faq` (jsonb com `[{question, answer}]`).
-- Rodapé: `footer_text`, `footer_links` (jsonb), `footer_payment_methods` (texto).
-- Comprovante: `receipt_header_text`, `receipt_footer_text`, `receipt_show_logo` (bool).
+## 2. Templates temáticos (novo módulo)
 
-**UI** (`/admin/content`):
-- Tabs: Home / Sobre / Produto / FAQ / Rodapé.
-- Editor de banners e FAQ com adicionar/remover/reordenar.
-- Reuso de `uploadImage` pra tudo que é imagem.
+Sistema no admin em **Configurações → Tema da loja**. Ativa um pacote e o site inteiro muda cores de acento, banners, ícones decorativos e microcopy.
 
-**Vitrine** (`/`, `/produto/$id`) passa a ler esses campos. Footer global novo em `StoreHeader` ou novo `StoreFooter`.
+Pacotes: São João, Copa do Mundo, Ano Novo, Natal, Black Friday, Carnaval, Dia das Mães, Padrão. Cada tema traz:
+- Paleta de acento (mantém preto base, troca dourado por cor do tema).
+- Elemento decorativo (bandeirinhas SVG, bola, fogos, floco, neon, confete, coração).
+- Banner temático animado no topo da home.
+- Countdown opcional (Black Friday/Copa).
+- Data de expiração automática (agenda ativar/desativar).
 
-## Bloco 2 — Busca (lupa)
+## 3. Novas funções admin
 
-- **Site (cliente)**: input de busca no `StoreHeader` (ícone lupa que abre overlay). Filtra produtos por nome/descrição/categoria. Mobile-friendly.
-- **Admin**: lupa global no topo do layout admin (`admin.tsx`) que busca em produtos, pedidos (id, cliente, telefone) e categorias — resultado como dropdown com link direto.
-- Implementação client-side com `ilike` no Supabase (debounced 300ms).
+- **Cupons de desconto**: %, valor fixo, frete grátis, mínimo de compra, validade, limite de uso; aplicáveis no checkout.
+- **Programa de fidelidade**: pontos por real gasto, resgate em desconto, saldo visível ao cliente.
+- **Reviews de clientes**: nota + comentário no produto após compra paga, moderação no admin, média exibida.
+- **Notificações WhatsApp**: link `wa.me` gerado com mensagem de status pedido; botão "Notificar cliente" no admin. (SMS/API completa fica em fase 2 opcional.)
+- **Relatórios avançados**: gráficos de vendas 30/90 dias, top produtos, ticket médio, taxa de conversão, comparação de canais.
+- **Kanban de pedidos**: colunas Pago → Preparando → Pronto → Entregue, arrastar para mudar status.
+- **Etiquetas visuais**: Novo, Promo, Últimas unidades, Frete grátis — aparecem no card do produto.
+- **Frete por CEP**: tabela por faixa de CEP com valor e prazo; opção de retirada continua grátis.
+- **Central do cliente** ampliada: endereços salvos, favoritos, histórico com filtros, reordenar compra.
 
-## Bloco 3 — Papéis e permissões
+## 4. Detalhes técnicos
 
-**Schema**:
-- Adicionar `'funcionario'` ao enum `app_role`.
+- Migrations novas: `coupons`, `loyalty_points`, `product_reviews`, `shipping_rates`, `favorites`, `customer_addresses`, colunas `theme_key/theme_expires_at/product_tags` em `store_settings`/`products`, campo `kanban_status` em `orders`.
+- Tudo com RLS (cliente vê o próprio, admin/funcionário gerencia).
+- Server functions para cupons/fidelidade/reviews (validação server-side, sem burlar client).
+- Kanban usa `@dnd-kit/core` (já compatível).
+- Fontes carregadas via `<link>` no `__root.tsx`.
+- Nenhuma quebra do checkout Mercado Pago atual.
 
-**Permissões** (resolvidas por helper `canAccess(role, section)` no front + checagem em RLS de tabelas sensíveis):
-- **admin**: tudo.
-- **funcionario**: Dashboard básico, **Produtos** (CRUD), **Categorias** (CRUD), **PDV**, **Pedidos** (ver e atualizar status) — bloqueado: Financeiro, Configurações, Conteúdo, Cancelar/Reembolsar, gestão de usuários.
-- **cliente**: só loja + meus pedidos.
+## Ordem de execução
 
-**Gestão de usuários** (`/admin/users`, só admin):
-- Lista usuários com papel atual.
-- Botões pra trocar papel: cliente ↔ funcionario ↔ admin.
-- Server function `setUserRole` protegida (verifica `has_role(admin)`).
+1. Fundação design (fontes, tokens, header/menu cliente, home, produto, checkout).
+2. Templates temáticos + admin de tema.
+3. Migrations + admin (cupons, fidelidade, reviews, frete, etiquetas, kanban, relatórios).
+4. Central do cliente ampliada.
+5. Publica.
 
-**Atualizar RLS** das tabelas `products`, `categories`, `orders` para aceitar `funcionario` onde faz sentido. `expenses` e `store_settings` permanecem só admin.
-
-## Bloco 4 — Export / Import / Backup
-
-**Nova seção `/admin/backup`** (só admin):
-
-**Export CSV** (botões por entidade):
-- Produtos, Pedidos, Despesas, Categorias — gerados client-side com `papaparse` a partir das queries.
-
-**Import CSV de produtos**:
-- Upload, preview da tabela, validação (nome/preço/estoque obrigatórios), confirma → bulk insert via server fn.
-
-**Backup completo (JSON)**:
-- Botão "Baixar backup" → server fn `exportBackup` agrega todas as tabelas (sem auth.users) e devolve JSON pra download.
-- Botão "Restaurar backup" → upload de JSON, confirma com modal de aviso, server fn `importBackup` faz upsert.
-- Ambas exigem `has_role(admin)`.
-
-## Bloco 5 — Comprovante editável
-
-**Personalização global** (já no Bloco 1 — campos `receipt_*` nas configs).
-
-**Revisar antes de finalizar venda no PDV**:
-- No `/admin/pdv`, antes do "Finalizar venda" abre **modal de revisão**:
-  - Lista de itens com edição inline de **quantidade, preço unitário, desconto por item**.
-  - Desconto geral, observações livres, escolha do método de pagamento.
-  - Pré-visualização do comprovante (renderiza `/comprovante/$id` mock em iframe ou render inline).
-  - "Confirmar e finalizar" → cria order com os ajustes.
-
-**Editar comprovante de venda já feita** (admin):
-- Em `/admin/orders`, botão "Editar comprovante" abre o mesmo editor → atualiza order/items, recalcula totais, devolve estoque dos itens removidos e debita dos adicionados.
-
----
-
-## Detalhes técnicos
-
-- Helper `src/lib/permissions.ts` com `usePermissions()` (lê role do user e expõe `can('products.edit')`, etc).
-- Sidebar do `/admin` filtra links por permissão.
-- Layout admin (`admin.tsx`) verifica `admin|funcionario` em vez de só `admin`.
-- Server fns novas em `src/lib/admin.functions.ts`: `setUserRole`, `exportBackup`, `importBackup`, `bulkImportProducts`, `updateOrderItems`.
-- CSV via `papaparse` (já leve, ~40kb).
-- Busca: hook `useProductSearch(q)` com `useQuery` + `ilike`.
-
-Pronto pra construir tudo. Posso seguir?
+Aprova pra eu começar?
