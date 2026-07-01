@@ -1,11 +1,8 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/500.css";
-@import "@fontsource/inter/600.css";
-@import "@fontsource/inter/700.css";
-@import "@fontsource/inter/800.css";
+@import "@fontsource-variable/work-sans";
+@import "@fontsource/instrument-serif/400.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -22,6 +19,52 @@
   &:focus {
     border-color: var(--primary);
   }
+}
+
+@utility font-display {
+  font-family: "Instrument Serif", "Playfair Display", ui-serif, Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+@utility eyebrow {
+  font-family: "Work Sans Variable", "Work Sans", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--foreground) 60%, transparent);
+}
+
+@utility hairline {
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in oklab, var(--theme-accent, var(--primary)) 40%, transparent),
+    transparent
+  );
+}
+
+@utility theme-accent-text {
+  color: var(--theme-accent, var(--primary));
+}
+
+@utility theme-accent-bg {
+  background-color: var(--theme-accent, var(--primary));
+  color: var(--primary-foreground);
+}
+
+@utility gold-gradient {
+  background: linear-gradient(
+    120deg,
+    var(--theme-accent, var(--primary)) 0%,
+    var(--theme-accent-glow, oklch(0.9 0.14 92)) 55%,
+    var(--theme-accent, var(--primary)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /*
@@ -46,7 +89,10 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Work Sans Variable", "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Instrument Serif", "Playfair Display", ui-serif, Georgia, serif;
+  --color-theme-accent: var(--theme-accent);
+  --color-theme-accent-glow: var(--theme-accent-glow);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -123,6 +169,9 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.22 0 0);
   --sidebar-ring: oklch(0.78 0.14 86);
+  /* Theme accent — sobrescrito em runtime pelos temas festivos */
+  --theme-accent: oklch(0.78 0.14 86);
+  --theme-accent-glow: oklch(0.9 0.14 92);
 }
 
 .dark {
@@ -168,5 +217,96 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
   }
+  h1, h2, h3, .display {
+    font-family: var(--font-serif);
+    letter-spacing: -0.015em;
+  }
+}
+
+/* ============ THEME DECORATIONS ============ */
+.theme-decoration {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.theme-flags {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 22px,
+    color-mix(in oklab, var(--theme-accent) 25%, transparent) 22px 24px
+  );
+  opacity: 0.35;
+}
+.theme-neon {
+  background:
+    radial-gradient(circle at 20% 30%, color-mix(in oklab, var(--theme-accent) 35%, transparent), transparent 45%),
+    radial-gradient(circle at 80% 60%, color-mix(in oklab, var(--theme-accent-glow) 45%, transparent), transparent 45%);
+  filter: blur(2px);
+}
+.theme-snow::after {
+  content: "❄ ❆ ❅ ❆ ❄ ❅ ❄ ❆ ❅";
+  position: absolute;
+  inset: 0;
+  font-size: 24px;
+  letter-spacing: 40px;
+  color: color-mix(in oklab, var(--theme-accent-glow) 70%, transparent);
+  animation: theme-snow-fall 14s linear infinite;
+  opacity: 0.5;
+}
+@keyframes theme-snow-fall {
+  from { transform: translateY(-40px); }
+  to { transform: translateY(120%); }
+}
+.theme-confetti {
+  background-image:
+    radial-gradient(circle, var(--theme-accent) 2px, transparent 3px),
+    radial-gradient(circle, var(--theme-accent-glow) 2px, transparent 3px);
+  background-size: 40px 40px, 60px 60px;
+  background-position: 0 0, 20px 20px;
+  opacity: 0.4;
+}
+.theme-hearts::after {
+  content: "♥";
+  position: absolute;
+  inset: 0;
+  font-size: 20px;
+  letter-spacing: 60px;
+  color: color-mix(in oklab, var(--theme-accent) 50%, transparent);
+  line-height: 60px;
+  opacity: 0.4;
+}
+.theme-fireworks {
+  background:
+    radial-gradient(circle at 25% 40%, color-mix(in oklab, var(--theme-accent-glow) 60%, transparent) 0, transparent 25%),
+    radial-gradient(circle at 75% 55%, color-mix(in oklab, var(--theme-accent) 60%, transparent) 0, transparent 22%),
+    radial-gradient(circle at 50% 20%, color-mix(in oklab, var(--theme-accent-glow) 40%, transparent) 0, transparent 18%);
+  opacity: 0.6;
+}
+.theme-ball {
+  background-image: radial-gradient(circle, color-mix(in oklab, var(--theme-accent) 65%, transparent) 8px, transparent 10px);
+  background-size: 80px 80px;
+  opacity: 0.25;
+}
+
+.card-hover {
+  transition: transform 0.35s cubic-bezier(.2,.7,.2,1), border-color 0.2s, box-shadow 0.35s;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px -20px color-mix(in oklab, var(--theme-accent, var(--primary)) 45%, transparent);
+  border-color: color-mix(in oklab, var(--theme-accent, var(--primary)) 70%, transparent);
+}
+
+.marquee {
+  display: flex;
+  gap: 3rem;
+  animation: marquee 40s linear infinite;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
