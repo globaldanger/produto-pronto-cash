@@ -45,6 +45,8 @@ function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(0);
   const [qty, setQty] = useState(1);
+  const [favId, setFavId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const add = useCart((s) => s.add);
 
   useEffect(() => {
@@ -60,6 +62,30 @@ function ProductPage() {
       setLoading(false);
     })();
   }, [id]);
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      setUserId(u.user.id);
+      const { data: f } = await supabase.from("favorites").select("id").eq("user_id", u.user.id).eq("product_id", id).maybeSingle();
+      setFavId(f?.id ?? null);
+    })();
+  }, [id]);
+
+  async function toggleFav() {
+    if (!userId) return toast.error("Faça login para favoritar");
+    if (favId) {
+      await supabase.from("favorites").delete().eq("id", favId);
+      setFavId(null);
+      toast.success("Removido dos favoritos");
+    } else {
+      const { data, error } = await supabase.from("favorites").insert({ user_id: userId, product_id: id }).select("id").single();
+      if (error) return toast.error(error.message);
+      setFavId(data.id);
+      toast.success("Adicionado aos favoritos");
+    }
+  }
 
   if (loading) return <div className="p-12 text-center text-muted-foreground">Carregando...</div>;
   if (!product) throw notFound();
@@ -98,7 +124,17 @@ function ProductPage() {
           )}
         </div>
         <div>
-          <h1 className="text-3xl font-bold">{product.name}</h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-3xl font-bold">{product.name}</h1>
+            <button
+              onClick={toggleFav}
+              className={`grid h-11 w-11 place-items-center rounded-full border transition ${favId ? "border-destructive bg-destructive/10 text-destructive" : "border-border hover:border-destructive hover:text-destructive"}`}
+              aria-label="Favoritar"
+              title={favId ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+            >
+              <i className={`fa-${favId ? "solid" : "regular"} fa-heart`} />
+            </button>
+          </div>
           <div className="mt-4 flex items-baseline gap-3">
             {product.sale_price && (
               <span className="text-lg text-muted-foreground line-through">
