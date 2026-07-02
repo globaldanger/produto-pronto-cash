@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/stores/cart";
 import { createPixCheckout } from "@/lib/payments.functions";
+import { validateCoupon, type ValidatedCoupon } from "@/lib/coupons.functions";
 import { StoreHeader } from "@/components/StoreHeader";
 import { CartDrawer } from "@/components/CartDrawer";
 
@@ -32,6 +33,10 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const { items, total, clear, setQty, remove } = useCart();
   const submit = useServerFn(createPixCheckout);
+  const runValidateCoupon = useServerFn(validateCoupon);
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<ValidatedCoupon | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
@@ -125,6 +130,7 @@ function CheckoutPage() {
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
           customer: { ...form, phone: phoneDigits, cep: form.cep.replace(/\D/g, "") },
           payment_method: payment,
+          coupon_code: coupon?.code,
         },
       });
       clear();
@@ -141,6 +147,18 @@ function CheckoutPage() {
   }
 
   const itemsTotal = useMemo(() => total(), [items, total]);
+  const grandTotal = Math.max(0, itemsTotal - (coupon?.discount ?? 0));
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    try {
+      const c = await runValidateCoupon({ data: { code: couponInput, subtotal: itemsTotal } });
+      setCoupon(c);
+      toast.success(`Cupom aplicado: −R$ ${c.discount.toFixed(2)}`);
+    } catch (e) { toast.error((e as Error).message); setCoupon(null); }
+    finally { setCouponLoading(false); }
+  }
 
   if (checking || !user) {
     return <div className="p-12 text-center text-muted-foreground">Carregando...</div>;
@@ -353,10 +371,38 @@ function CheckoutPage() {
                       value={form.delivery_type === "pickup" ? "Grátis" : "A combinar"}
                       muted
                     />
+                    {coupon && (
+                      <Row label={`Cupom ${coupon.code}`} value={`− R$ ${coupon.discount.toFixed(2)}`} />
+                    )}
+                  </div>
+                  <div className="border-t border-border pt-3">
+                    {coupon ? (
+                      <div className="flex items-center justify-between rounded-lg theme-accent-bg px-3 py-2 text-xs font-bold">
+                        <span><i className="fa-solid fa-ticket mr-1" /> {coupon.code} aplicado</span>
+                        <button onClick={() => { setCoupon(null); setCouponInput(""); }} className="text-black/70 hover:text-black"><i className="fa-solid fa-xmark" /></button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          className="input flex-1"
+                          placeholder="Cupom de desconto"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                        />
+                        <button
+                          type="button"
+                          onClick={applyCoupon}
+                          disabled={couponLoading}
+                          className="rounded-md border border-border px-3 text-xs font-semibold hover:border-primary disabled:opacity-50"
+                        >
+                          {couponLoading ? <i className="fa-solid fa-spinner fa-spin" /> : "Aplicar"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-baseline justify-between border-t border-border pt-3">
                     <span className="text-muted-foreground">Total</span>
-                    <span className="text-3xl font-extrabold text-primary">R$ {itemsTotal.toFixed(2)}</span>
+                    <span className="text-3xl font-extrabold text-primary">R$ {grandTotal.toFixed(2)}</span>
                   </div>
 
                   <button
