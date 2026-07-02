@@ -158,18 +158,12 @@ export const createPixCheckout = createServerFn({ method: "POST" })
         user_id: userId,
         discount: couponDiscount,
       });
-      await supabaseAdmin.rpc("increment_coupon_uses", { p_coupon_id: couponId })
-        .then(async (r) => {
-          if (r.error) {
-            // fallback: update directly
-            const { data: cur } = await supabaseAdmin
-              .from("coupons").select("uses").eq("id", couponId).maybeSingle();
-            await supabaseAdmin
-              .from("coupons")
-              .update({ uses: (Number(cur?.uses ?? 0) + 1) })
-              .eq("id", couponId);
-          }
-        });
+      const { data: cur } = await supabaseAdmin
+        .from("coupons").select("uses").eq("id", couponId).maybeSingle();
+      await supabaseAdmin
+        .from("coupons")
+        .update({ uses: Number(cur?.uses ?? 0) + 1 })
+        .eq("id", couponId);
     }
 
     // Both Pix and Card use Checkout Pro (hosted checkout). This works in any
