@@ -157,9 +157,11 @@ export function StoreHeader() {
                     </div>
                   </div>
                   <div className="p-1">
-                    <MenuItem href="/meus-pedidos" icon="fa-receipt" label="Meus pedidos" desc="Acompanhe suas compras" onClick={() => setMenuOpen(false)} />
-                    <MenuItem href="/meus-pedidos" icon="fa-heart" label="Favoritos" desc="Produtos salvos (em breve)" onClick={() => setMenuOpen(false)} />
-                    <MenuItem href="/meus-pedidos" icon="fa-location-dot" label="Meus endereços" desc="Entrega mais rápida" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/conta?tab=orders" icon="fa-receipt" label="Meus pedidos" desc="Acompanhe suas compras" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/conta?tab=favorites" icon="fa-heart" label="Favoritos" desc="Produtos salvos" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/conta?tab=addresses" icon="fa-location-dot" label="Meus endereços" desc="Entrega mais rápida" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/conta?tab=points" icon="fa-star" label="Pontos de fidelidade" desc="Saldo e histórico" onClick={() => setMenuOpen(false)} />
+                    <MenuItem href="/conta?tab=profile" icon="fa-user-gear" label="Meu perfil" desc="Nome, telefone e senha" onClick={() => setMenuOpen(false)} />
                     <MenuItem href="/rastrear" icon="fa-truck" label="Rastrear pedido" desc="Consultar por código" onClick={() => setMenuOpen(false)} />
                   </div>
                   <div className="border-t border-border/60 p-1">
