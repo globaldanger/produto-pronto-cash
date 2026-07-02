@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadImage, deleteProductImage } from "@/lib/storage";
+import { useServerFn } from "@tanstack/react-start";
+import { getAdminPaymentSecrets, setAdminPaymentSecrets } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
   component: SettingsPage,
@@ -31,11 +33,20 @@ type Settings = {
 
 function SettingsPage() {
   const qc = useQueryClient();
+  const loadSecrets = useServerFn(getAdminPaymentSecrets);
+  const saveSecrets = useServerFn(setAdminPaymentSecrets);
   const { data } = useQuery({
     queryKey: ["settings"],
     queryFn: async () => {
-      const { data } = await supabase.from("store_settings").select("*").limit(1).maybeSingle();
+      const { data } = await supabase
+        .from("store_settings")
+        .select(
+          "id,store_name,store_phone,store_email,store_address,store_whatsapp,store_instagram,pix_key,store_logo,store_header_image,about_hero_image,about_gallery,about_text1,about_text2,store_slogan,store_hours"
+        )
+        .limit(1)
+        .maybeSingle();
       if (!data) return null;
+      const secrets = await loadSecrets();
       const norm: Settings = {
         id: data.id,
         store_name: data.store_name ?? "",
@@ -45,7 +56,7 @@ function SettingsPage() {
         store_whatsapp: data.store_whatsapp ?? "",
         store_instagram: data.store_instagram ?? "",
         pix_key: data.pix_key ?? "",
-        mercadopago_access_token: data.mercadopago_access_token ?? "",
+        mercadopago_access_token: secrets?.mercadopago_access_token ?? "",
         store_logo: data.store_logo ?? null,
         store_header_image: data.store_header_image ?? null,
         about_hero_image: data.about_hero_image ?? null,
@@ -80,7 +91,6 @@ function SettingsPage() {
         store_whatsapp: form.store_whatsapp,
         store_instagram: form.store_instagram,
         pix_key: form.pix_key,
-        mercadopago_access_token: form.mercadopago_access_token,
         store_logo: form.store_logo,
         store_header_image: form.store_header_image,
         about_hero_image: form.about_hero_image,
@@ -91,8 +101,19 @@ function SettingsPage() {
         store_hours: form.store_hours,
       })
       .eq("id", data.id);
+    if (error) {
+      setSaving(false);
+      return toast.error(error.message);
+    }
+    try {
+      await saveSecrets({
+        data: { mercadopago_access_token: form.mercadopago_access_token ?? "" },
+      });
+    } catch (e) {
+      setSaving(false);
+      return toast.error((e as Error).message);
+    }
     setSaving(false);
-    if (error) return toast.error(error.message);
     toast.success("Configurações salvas");
     qc.invalidateQueries({ queryKey: ["settings"] });
     qc.invalidateQueries({ queryKey: ["store_settings_public"] });
