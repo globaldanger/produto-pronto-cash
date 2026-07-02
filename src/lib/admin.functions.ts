@@ -142,6 +142,42 @@ export const bulkImportProducts = createServerFn({ method: "POST" })
 
 type EditItem = { product_id: string; product_name: string; quantity: number; unit_price: number };
 
+export const getAdminPaymentSecrets = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("store_settings")
+      .select("id,mercadopago_access_token")
+      .limit(1)
+      .maybeSingle();
+    return {
+      id: data?.id ?? null,
+      mercadopago_access_token: data?.mercadopago_access_token ?? "",
+    };
+  });
+
+export const setAdminPaymentSecrets = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { mercadopago_access_token: string }) => data)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("store_settings")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+    if (!existing?.id) throw new Error("Configurações não encontradas");
+    const { error } = await supabaseAdmin
+      .from("store_settings")
+      .update({ mercadopago_access_token: data.mercadopago_access_token || null })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const updateOrderItems = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { orderId: string; items: EditItem[]; discount?: number; notes?: string }) => {
