@@ -18,6 +18,7 @@ type CheckoutInput = {
     state?: string;
   };
   payment_method?: "pix" | "card";
+  coupon_code?: string;
 };
 
 export const createPixCheckout = createServerFn({ method: "POST" })
@@ -59,6 +60,35 @@ export const createPixCheckout = createServerFn({ method: "POST" })
         unit_price: unit,
       };
     });
+
+    const subtotal = total;
+    // Apply coupon if present
+    let couponCode: string | null = null;
+    let couponDiscount = 0;
+    let couponId: string | null = null;
+    if (data.coupon_code?.trim()) {
+      const codeUp = data.coupon_code.trim().toUpperCase();
+      const { data: c } = await supabaseAdmin
+        .from("coupons")
+        .select("id,code,type,value,min_order,max_uses,uses,expires_at,active")
+        .ilike("code", codeUp)
+        .maybeSingle();
+      if (!c) throw new Error("Cupom não encontrado");
+      if (!c.active) throw new Error("Cupom pausado");
+      if (c.expires_at && new Date(c.expires_at).getTime() < Date.now())
+        throw new Error("Cupom expirado");
+      if (c.max_uses !== null && Number(c.uses) >= Number(c.max_uses))
+        throw new Error("Cupom esgotado");
+      if (subtotal < Number(c.min_order))
+        throw new Error(`Pedido mínimo R$ ${Number(c.min_order).toFixed(2)} para este cupom`);
+      let d = 0;
+      if (c.type === "percent") d = (subtotal * Number(c.value)) / 100;
+      else if (c.type === "fixed") d = Number(c.value);
+      couponDiscount = Math.max(0, Math.min(d, subtotal));
+      couponCode = c.code;
+      couponId = c.id;
+      total = Math.max(0, subtotal - couponDiscount);
+    }
 
     // Load MP token from store_settings
     const { data: settings } = await supabaseAdmin
@@ -104,6 +134,9 @@ export const createPixCheckout = createServerFn({ method: "POST" })
         shipping_city: data.customer.city ?? null,
         shipping_state: data.customer.state ?? null,
         total,
+        discount: couponDiscount,
+        discount_coupon: couponDiscount,
+        coupon_code: couponCode,
         status: "pending",
         channel: "online",
         payment_method: method,
@@ -116,6 +149,28 @@ export const createPixCheckout = createServerFn({ method: "POST" })
       .from("order_items")
       .insert(orderItems.map((it) => ({ ...it, order_id: order.id })));
     if (iErr) throw iErr;
+
+    // Registrar resgate do cupom
+    if (couponId && couponCode) {
+      await supabaseAdmin.from("coupon_redemptions").insert({
+        coupon_id: couponId,
+        order_id: order.id,
+        user_id: userId,
+        discount: couponDiscount,
+      });
+      await supabaseAdmin.rpc("increment_coupon_uses", { p_coupon_id: couponId })
+        .then(async (r) => {
+          if (r.error) {
+            // fallback: update directly
+            const { data: cur } = await supabaseAdmin
+              .from("coupons").select("uses").eq("id", couponId).maybeSingle();
+            await supabaseAdmin
+              .from("coupons")
+              .update({ uses: (Number(cur?.uses ?? 0) + 1) })
+              .eq("id", couponId);
+          }
+        });
+    }
 
     // Both Pix and Card use Checkout Pro (hosted checkout). This works in any
     // hosting environment (Netlify, InfinityFree, Cloudflare, etc.) since the
