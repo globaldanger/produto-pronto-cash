@@ -21,6 +21,8 @@ const NAV: { to: string; icon: string; label: string; exact?: boolean; perm: Per
   { to: "/admin/products", icon: "fa-box", label: "Produtos", perm: "products" },
   { to: "/admin/categories", icon: "fa-tags", label: "Categorias", perm: "categories" },
   { to: "/admin/orders", icon: "fa-shopping-cart", label: "Pedidos", perm: "orders.view" },
+  { to: "/admin/coupons", icon: "fa-ticket", label: "Cupons", perm: "coupons" },
+  { to: "/admin/themes", icon: "fa-palette", label: "Temas festivos", perm: "themes" },
   { to: "/admin/finance", icon: "fa-chart-line", label: "Financeiro", perm: "finance" },
   { to: "/admin/content", icon: "fa-pen-ruler", label: "Conteúdo do site", perm: "content" },
   { to: "/admin/users", icon: "fa-users", label: "Usuários", perm: "users" },
