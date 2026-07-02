@@ -1,0 +1,1 @@
+REVOKE SELECT (mercadopago_access_token) ON public.store_settings FROM anon, authenticated, PUBLIC;
