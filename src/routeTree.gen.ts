@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RastrearRouteImport } from './routes/rastrear'
 import { Route as MeusPedidosRouteImport } from './routes/meus-pedidos'
+import { Route as ContaRouteImport } from './routes/conta'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -42,6 +43,11 @@ const RastrearRoute = RastrearRouteImport.update({
 const MeusPedidosRoute = MeusPedidosRouteImport.update({
   id: '/meus-pedidos',
   path: '/meus-pedidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContaRoute = ContaRouteImport.update({
+  id: '/conta',
+  path: '/conta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/conta': typeof ContaRoute
   '/meus-pedidos': typeof MeusPedidosRouteWithChildren
   '/rastrear': typeof RastrearRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/conta': typeof ContaRoute
   '/meus-pedidos': typeof MeusPedidosRouteWithChildren
   '/rastrear': typeof RastrearRoute
   '/comprovante/$id': typeof ComprovanteIdRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/conta': typeof ContaRoute
   '/meus-pedidos': typeof MeusPedidosRouteWithChildren
   '/rastrear': typeof RastrearRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/checkout'
+    | '/conta'
     | '/meus-pedidos'
     | '/rastrear'
     | '/admin'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/checkout'
+    | '/conta'
     | '/meus-pedidos'
     | '/rastrear'
     | '/comprovante/$id'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/checkout'
+    | '/conta'
     | '/meus-pedidos'
     | '/rastrear'
     | '/_authenticated/admin'
@@ -320,6 +332,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
+  ContaRoute: typeof ContaRoute
   MeusPedidosRoute: typeof MeusPedidosRouteWithChildren
   RastrearRoute: typeof RastrearRoute
   ComprovanteIdRoute: typeof ComprovanteIdRoute
@@ -341,6 +354,13 @@ declare module '@tanstack/react-router' {
       path: '/meus-pedidos'
       fullPath: '/meus-pedidos'
       preLoaderRoute: typeof MeusPedidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conta': {
+      id: '/conta'
+      path: '/conta'
+      fullPath: '/conta'
+      preLoaderRoute: typeof ContaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -573,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
+  ContaRoute: ContaRoute,
   MeusPedidosRoute: MeusPedidosRouteWithChildren,
   RastrearRoute: RastrearRoute,
   ComprovanteIdRoute: ComprovanteIdRoute,
