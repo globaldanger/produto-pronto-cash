@@ -40,7 +40,13 @@ function ContentPage() {
   const { data } = useQuery({
     queryKey: ["admin_content"],
     queryFn: async () => {
-      const { data } = await supabase.from("store_settings").select("*").limit(1).maybeSingle();
+      const { data } = await supabase
+        .from("store_settings")
+        .select(
+          "id,home_hero_title,home_hero_subtitle,home_hero_cta,home_banners,about_text1,about_text2,about_hero_image,about_gallery,product_page_shipping_text,product_page_warranty_text,product_page_extra_info,faq,footer_text,footer_links,footer_payment_methods,receipt_header_text,receipt_footer_text,receipt_show_logo"
+        )
+        .limit(1)
+        .maybeSingle();
       return data as any;
     },
   });
