@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { useActiveTheme, ThemeDecorationLayer } from "@/lib/theme";
 
 function NotFoundComponent() {
   return (
@@ -137,8 +138,22 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <ThemedShell />
       <Toaster theme="dark" position="top-right" richColors />
     </QueryClientProvider>
+  );
+}
+
+function ThemedShell() {
+  const theme = useActiveTheme();
+  return (
+    <>
+      {theme && theme.key !== "default" && theme.decoration !== "none" && (
+        <div className="pointer-events-none fixed inset-0 z-[1] opacity-60">
+          <ThemeDecorationLayer theme={theme} />
+        </div>
+      )}
+      <Outlet />
+    </>
   );
 }
