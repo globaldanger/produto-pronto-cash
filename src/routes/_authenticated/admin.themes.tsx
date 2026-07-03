@@ -118,10 +118,21 @@ function ThemesPage() {
         <div>
           <h1 className="text-2xl font-bold">Temas festivos</h1>
           <p className="text-sm text-muted-foreground">Ative decorações e cores especiais em datas comemorativas.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Tema ativo agora: <span className="font-mono font-bold theme-accent-text">{active}</span></p>
         </div>
-        <button onClick={() => setEditing({ ...EMPTY })} className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
-          <i className="fa-solid fa-plus mr-1" /> Novo tema
-        </button>
+        <div className="flex gap-2">
+          {active !== "default" && (
+            <button
+              onClick={() => activate({ ...PRESETS[0] })}
+              className="rounded-md border border-border px-4 py-2 text-sm hover:border-primary"
+            >
+              <i className="fa-solid fa-rotate-left mr-1" /> Voltar ao padrão
+            </button>
+          )}
+          <button onClick={() => setEditing({ ...EMPTY })} className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+            <i className="fa-solid fa-plus mr-1" /> Novo tema
+          </button>
+        </div>
       </header>
 
       <section className="rounded-xl border border-border bg-card p-4">
