@@ -79,7 +79,9 @@ function ThemesPage() {
   });
 
   async function activate(t: ThemePack) {
-    const { error } = await supabase.from("store_settings").update({ active_theme_key: t.key }).eq("id", "singleton");
+    const { data: row } = await supabase.from("store_settings").select("id").limit(1).maybeSingle();
+    if (!row?.id) return toast.error("Configurações da loja não encontradas");
+    const { error } = await supabase.from("store_settings").update({ active_theme_key: t.key }).eq("id", row.id);
     if (error) return toast.error(error.message);
     toast.success(`Tema "${t.name}" ativado`);
     qc.invalidateQueries({ queryKey: ["admin_active_theme"] });
