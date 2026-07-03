@@ -28,6 +28,8 @@ const DECOS = [
   { key: "confetti", label: "Confetes (Copa)" },
   { key: "snow", label: "Neve (Natal)" },
   { key: "hearts", label: "Corações" },
+  { key: "neon", label: "Neon (Black Friday)" },
+  { key: "ball", label: "Bolinhas (Aniversário)" },
 ];
 
 const PRESETS: ThemePack[] = [
@@ -36,6 +38,13 @@ const PRESETS: ThemePack[] = [
   { key: "copa", name: "Copa do Mundo", accent_color: "#22c55e", accent_glow: "#fde047", banner_text: "É Copa!", banner_subtext: "Vibre com os melhores preços", decoration: "confetti", active: false },
   { key: "ano_novo", name: "Ano Novo", accent_color: "#c084fc", accent_glow: "#f9a8d4", banner_text: "Feliz Ano Novo!", banner_subtext: "Comece o ano com tecnologia", decoration: "fireworks", active: false },
   { key: "natal", name: "Natal", accent_color: "#ef4444", accent_glow: "#4ade80", banner_text: "Feliz Natal!", banner_subtext: "Presentes que encantam", decoration: "snow", active: false },
+  { key: "black_friday", name: "Black Friday", accent_color: "#facc15", accent_glow: "#fbbf24", banner_text: "Black Friday SmartCell", banner_subtext: "Os maiores descontos do ano", decoration: "neon", active: false },
+  { key: "carnaval", name: "Carnaval", accent_color: "#ec4899", accent_glow: "#a855f7", banner_text: "Carnaval de ofertas!", banner_subtext: "Cai na folia dos preços baixos", decoration: "confetti", active: false },
+  { key: "dia_das_maes", name: "Dia das Mães", accent_color: "#f472b6", accent_glow: "#fda4af", banner_text: "Presenteie quem você ama", banner_subtext: "Ofertas especiais para mamãe", decoration: "hearts", active: false },
+  { key: "dia_dos_pais", name: "Dia dos Pais", accent_color: "#38bdf8", accent_glow: "#818cf8", banner_text: "Presente pra ele!", banner_subtext: "Tecnologia com desconto especial", decoration: "confetti", active: false },
+  { key: "namorados", name: "Dia dos Namorados", accent_color: "#f43f5e", accent_glow: "#fb7185", banner_text: "Amor com tecnologia", banner_subtext: "Ofertas românticas SmartCell", decoration: "hearts", active: false },
+  { key: "halloween", name: "Halloween", accent_color: "#f97316", accent_glow: "#a855f7", banner_text: "Doces preços de arrepiar", banner_subtext: "Ofertas assustadoramente boas", decoration: "neon", active: false },
+  { key: "aniversario", name: "Aniversário da loja", accent_color: "#f4d47a", accent_glow: "#d4af37", banner_text: "Aniversário SmartCell!", banner_subtext: "Comemore com a gente — descontos exclusivos", decoration: "ball", active: false },
 ];
 
 const EMPTY: ThemePack = {
@@ -79,7 +88,9 @@ function ThemesPage() {
   });
 
   async function activate(t: ThemePack) {
-    const { error } = await supabase.from("store_settings").update({ active_theme_key: t.key }).eq("id", "singleton");
+    const { data: row } = await supabase.from("store_settings").select("id").limit(1).maybeSingle();
+    if (!row?.id) return toast.error("Configurações da loja não encontradas");
+    const { error } = await supabase.from("store_settings").update({ active_theme_key: t.key }).eq("id", row.id);
     if (error) return toast.error(error.message);
     toast.success(`Tema "${t.name}" ativado`);
     qc.invalidateQueries({ queryKey: ["admin_active_theme"] });
@@ -107,10 +118,21 @@ function ThemesPage() {
         <div>
           <h1 className="text-2xl font-bold">Temas festivos</h1>
           <p className="text-sm text-muted-foreground">Ative decorações e cores especiais em datas comemorativas.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Tema ativo agora: <span className="font-mono font-bold theme-accent-text">{active}</span></p>
         </div>
-        <button onClick={() => setEditing({ ...EMPTY })} className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
-          <i className="fa-solid fa-plus mr-1" /> Novo tema
-        </button>
+        <div className="flex gap-2">
+          {active !== "default" && (
+            <button
+              onClick={() => activate({ ...PRESETS[0] })}
+              className="rounded-md border border-border px-4 py-2 text-sm hover:border-primary"
+            >
+              <i className="fa-solid fa-rotate-left mr-1" /> Voltar ao padrão
+            </button>
+          )}
+          <button onClick={() => setEditing({ ...EMPTY })} className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+            <i className="fa-solid fa-plus mr-1" /> Novo tema
+          </button>
+        </div>
       </header>
 
       <section className="rounded-xl border border-border bg-card p-4">
