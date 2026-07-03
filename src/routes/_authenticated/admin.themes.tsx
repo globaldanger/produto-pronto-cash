@@ -28,6 +28,8 @@ const DECOS = [
   { key: "confetti", label: "Confetes (Copa)" },
   { key: "snow", label: "Neve (Natal)" },
   { key: "hearts", label: "Corações" },
+  { key: "neon", label: "Neon (Black Friday)" },
+  { key: "ball", label: "Bolinhas (Aniversário)" },
 ];
 
 const PRESETS: ThemePack[] = [
