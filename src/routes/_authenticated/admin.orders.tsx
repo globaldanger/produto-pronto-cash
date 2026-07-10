@@ -42,6 +42,7 @@ function OrdersPage() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
   const [channelFilter, setChannelFilter] = useState<string>("all");
+  const [view, setView] = useState<"lista" | "kanban">("lista");
   const doCancel = useServerFn(cancelOrder);
   const doRefund = useServerFn(refundOrder);
   const doUpdate = useServerFn(updateOrderItems);
@@ -145,6 +146,18 @@ function OrdersPage() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="inline-flex rounded-lg border border-border p-1">
+          <button onClick={() => setView("lista")}
+            className={`rounded-md px-3 py-1.5 text-xs font-semibold ${view === "lista" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+            <i className="fa-solid fa-list mr-1" /> Lista
+          </button>
+          <button onClick={() => setView("kanban")}
+            className={`rounded-md px-3 py-1.5 text-xs font-semibold ${view === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+            <i className="fa-solid fa-columns mr-1" /> Kanban
+          </button>
+        </div>
+      </div>
       <div className="flex flex-wrap gap-2">
         {["all", "online", "fisica"].map((c) => (
           <button
@@ -156,7 +169,7 @@ function OrdersPage() {
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
+      {view === "lista" && <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setFilter("all")}
           className={`rounded-full px-4 py-1.5 text-xs font-semibold ${filter === "all" ? "bg-primary text-primary-foreground" : "border border-border"}`}
@@ -172,9 +185,11 @@ function OrdersPage() {
             {LABEL[s]}
           </button>
         ))}
-      </div>
+      </div>}
 
-      {orders.length === 0 ? (
+      {view === "kanban" ? (
+        <KanbanBoard orders={orders} onMove={updateStatus} />
+      ) : orders.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center text-muted-foreground">
           <i className="fa-solid fa-receipt mb-3 text-4xl" />
           <p>Nenhum pedido encontrado</p>
@@ -228,6 +243,15 @@ function OrdersPage() {
                       title="Comprovante"
                     >
                       <i className="fa-solid fa-print" />
+                    </a>
+                    <a
+                      href={`/etiqueta/${o.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mr-1 inline-block rounded border border-border px-2 py-1 text-xs hover:border-primary hover:text-primary"
+                      title="Etiqueta de envio"
+                    >
+                      <i className="fa-solid fa-tag" />
                     </a>
                     {o.status !== "cancelled" && o.status !== "refunded" && (
                       <button
