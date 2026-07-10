@@ -38,10 +38,66 @@ function fmtBRL(n: number) {
   return Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function KanbanBoard({ orders, onMove }: { orders: Order[]; onMove: (id: string, status: Status) => void }) {
+  const cols: Status[] = ["pending", "paid", "shipped", "delivered", "cancelled", "refunded"];
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-4">
+      {cols.map((col) => {
+        const list = orders.filter((o) => o.status === col);
+        return (
+          <div
+            key={col}
+            className="min-w-[260px] flex-1 rounded-xl border border-border bg-surface p-3"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              const id = e.dataTransfer.getData("text/plain");
+              if (id) onMove(id, col);
+            }}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-bold">{LABEL[col]}</h3>
+              <span className="rounded-full bg-card px-2 py-0.5 text-[10px] font-bold text-muted-foreground">{list.length}</span>
+            </div>
+            <div className="space-y-2">
+              {list.map((o) => (
+                <div
+                  key={o.id}
+                  draggable
+                  onDragStart={(e) => e.dataTransfer.setData("text/plain", o.id)}
+                  className="cursor-grab rounded-lg border border-border bg-card p-3 text-xs active:cursor-grabbing hover:border-primary"
+                >
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground">#{o.id.slice(0, 8)}</span>
+                    <span className="text-[10px] uppercase text-muted-foreground">{o.channel === "fisica" ? "Física" : "Online"}</span>
+                  </div>
+                  <div className="truncate font-semibold">{o.customer_name ?? "Cliente"}</div>
+                  <div className="text-[11px] text-muted-foreground">{o.customer_phone ?? ""}</div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="font-bold text-primary">{fmtBRL(Number(o.total))}</span>
+                    <span className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleDateString("pt-BR")}</span>
+                  </div>
+                  <div className="mt-2 flex gap-1">
+                    <a href={`/comprovante/${o.id}`} target="_blank" rel="noreferrer" className="rounded border border-border px-2 py-0.5 text-[10px] hover:border-primary"><i className="fa-solid fa-print" /></a>
+                    <a href={`/etiqueta/${o.id}`} target="_blank" rel="noreferrer" className="rounded border border-border px-2 py-0.5 text-[10px] hover:border-primary"><i className="fa-solid fa-tag" /></a>
+                  </div>
+                </div>
+              ))}
+              {list.length === 0 && (
+                <div className="rounded border border-dashed border-border p-3 text-center text-[11px] text-muted-foreground">Arraste aqui</div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function OrdersPage() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
   const [channelFilter, setChannelFilter] = useState<string>("all");
+  const [view, setView] = useState<"lista" | "kanban">("lista");
   const doCancel = useServerFn(cancelOrder);
   const doRefund = useServerFn(refundOrder);
   const doUpdate = useServerFn(updateOrderItems);
@@ -145,6 +201,18 @@ function OrdersPage() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="inline-flex rounded-lg border border-border p-1">
+          <button onClick={() => setView("lista")}
+            className={`rounded-md px-3 py-1.5 text-xs font-semibold ${view === "lista" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+            <i className="fa-solid fa-list mr-1" /> Lista
+          </button>
+          <button onClick={() => setView("kanban")}
+            className={`rounded-md px-3 py-1.5 text-xs font-semibold ${view === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+            <i className="fa-solid fa-columns mr-1" /> Kanban
+          </button>
+        </div>
+      </div>
       <div className="flex flex-wrap gap-2">
         {["all", "online", "fisica"].map((c) => (
           <button
@@ -156,7 +224,7 @@ function OrdersPage() {
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
+      {view === "lista" && <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setFilter("all")}
           className={`rounded-full px-4 py-1.5 text-xs font-semibold ${filter === "all" ? "bg-primary text-primary-foreground" : "border border-border"}`}
@@ -172,9 +240,11 @@ function OrdersPage() {
             {LABEL[s]}
           </button>
         ))}
-      </div>
+      </div>}
 
-      {orders.length === 0 ? (
+      {view === "kanban" ? (
+        <KanbanBoard orders={orders} onMove={updateStatus} />
+      ) : orders.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center text-muted-foreground">
           <i className="fa-solid fa-receipt mb-3 text-4xl" />
           <p>Nenhum pedido encontrado</p>
@@ -228,6 +298,15 @@ function OrdersPage() {
                       title="Comprovante"
                     >
                       <i className="fa-solid fa-print" />
+                    </a>
+                    <a
+                      href={`/etiqueta/${o.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mr-1 inline-block rounded border border-border px-2 py-1 text-xs hover:border-primary hover:text-primary"
+                      title="Etiqueta de envio"
+                    >
+                      <i className="fa-solid fa-tag" />
                     </a>
                     {o.status !== "cancelled" && o.status !== "refunded" && (
                       <button

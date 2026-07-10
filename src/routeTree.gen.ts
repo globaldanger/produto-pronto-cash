@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutoIdRouteImport } from './routes/produto.$id'
 import { Route as MeusPedidosIdRouteImport } from './routes/meus-pedidos.$id'
+import { Route as EtiquetaIdRouteImport } from './routes/etiqueta.$id'
 import { Route as ComprovanteIdRouteImport } from './routes/comprovante.$id'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminThemesRouteImport } from './routes/_authenticated/admin.themes'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminSalesRouteImport } from './routes/_authenticated/admin.sales'
+import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
 import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authenticated/admin.products'
 import { Route as AuthenticatedAdminPdvRouteImport } from './routes/_authenticated/admin.pdv'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
@@ -81,6 +83,11 @@ const MeusPedidosIdRoute = MeusPedidosIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => MeusPedidosRoute,
 } as any)
+const EtiquetaIdRoute = EtiquetaIdRouteImport.update({
+  id: '/etiqueta/$id',
+  path: '/etiqueta/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComprovanteIdRoute = ComprovanteIdRouteImport.update({
   id: '/comprovante/$id',
   path: '/comprovante/$id',
@@ -128,6 +135,12 @@ const AuthenticatedAdminSalesRoute = AuthenticatedAdminSalesRouteImport.update({
   path: '/sales',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminReportsRoute =
+  AuthenticatedAdminReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProductsRoute =
   AuthenticatedAdminProductsRouteImport.update({
     id: '/products',
@@ -190,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/rastrear': typeof RastrearRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/comprovante/$id': typeof ComprovanteIdRoute
+  '/etiqueta/$id': typeof EtiquetaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -201,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/themes': typeof AuthenticatedAdminThemesRoute
@@ -217,6 +232,7 @@ export interface FileRoutesByTo {
   '/meus-pedidos': typeof MeusPedidosRouteWithChildren
   '/rastrear': typeof RastrearRoute
   '/comprovante/$id': typeof ComprovanteIdRoute
+  '/etiqueta/$id': typeof EtiquetaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -228,6 +244,7 @@ export interface FileRoutesByTo {
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
+  '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/themes': typeof AuthenticatedAdminThemesRoute
@@ -247,6 +264,7 @@ export interface FileRoutesById {
   '/rastrear': typeof RastrearRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/comprovante/$id': typeof ComprovanteIdRoute
+  '/etiqueta/$id': typeof EtiquetaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/_authenticated/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -258,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
   '/_authenticated/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/_authenticated/admin/products': typeof AuthenticatedAdminProductsRoute
+  '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/admin/sales': typeof AuthenticatedAdminSalesRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/themes': typeof AuthenticatedAdminThemesRoute
@@ -277,6 +296,7 @@ export interface FileRouteTypes {
     | '/rastrear'
     | '/admin'
     | '/comprovante/$id'
+    | '/etiqueta/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
@@ -288,6 +308,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/pdv'
     | '/admin/products'
+    | '/admin/reports'
     | '/admin/sales'
     | '/admin/settings'
     | '/admin/themes'
@@ -304,6 +325,7 @@ export interface FileRouteTypes {
     | '/meus-pedidos'
     | '/rastrear'
     | '/comprovante/$id'
+    | '/etiqueta/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
@@ -315,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/pdv'
     | '/admin/products'
+    | '/admin/reports'
     | '/admin/sales'
     | '/admin/settings'
     | '/admin/themes'
@@ -333,6 +356,7 @@ export interface FileRouteTypes {
     | '/rastrear'
     | '/_authenticated/admin'
     | '/comprovante/$id'
+    | '/etiqueta/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/_authenticated/admin/about'
@@ -344,6 +368,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/orders'
     | '/_authenticated/admin/pdv'
     | '/_authenticated/admin/products'
+    | '/_authenticated/admin/reports'
     | '/_authenticated/admin/sales'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/themes'
@@ -362,6 +387,7 @@ export interface RootRouteChildren {
   MeusPedidosRoute: typeof MeusPedidosRouteWithChildren
   RastrearRoute: typeof RastrearRoute
   ComprovanteIdRoute: typeof ComprovanteIdRoute
+  EtiquetaIdRoute: typeof EtiquetaIdRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
 }
@@ -431,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeusPedidosIdRouteImport
       parentRoute: typeof MeusPedidosRoute
     }
+    '/etiqueta/$id': {
+      id: '/etiqueta/$id'
+      path: '/etiqueta/$id'
+      fullPath: '/etiqueta/$id'
+      preLoaderRoute: typeof EtiquetaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/comprovante/$id': {
       id: '/comprovante/$id'
       path: '/comprovante/$id'
@@ -492,6 +525,13 @@ declare module '@tanstack/react-router' {
       path: '/sales'
       fullPath: '/admin/sales'
       preLoaderRoute: typeof AuthenticatedAdminSalesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/reports': {
+      id: '/_authenticated/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AuthenticatedAdminReportsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/products': {
@@ -570,6 +610,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
   AuthenticatedAdminPdvRoute: typeof AuthenticatedAdminPdvRoute
   AuthenticatedAdminProductsRoute: typeof AuthenticatedAdminProductsRoute
+  AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
   AuthenticatedAdminSalesRoute: typeof AuthenticatedAdminSalesRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminThemesRoute: typeof AuthenticatedAdminThemesRoute
@@ -587,6 +628,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
   AuthenticatedAdminPdvRoute: AuthenticatedAdminPdvRoute,
   AuthenticatedAdminProductsRoute: AuthenticatedAdminProductsRoute,
+  AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
   AuthenticatedAdminSalesRoute: AuthenticatedAdminSalesRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminThemesRoute: AuthenticatedAdminThemesRoute,
@@ -641,19 +683,10 @@ const rootRouteChildren: RootRouteChildren = {
   MeusPedidosRoute: MeusPedidosRouteWithChildren,
   RastrearRoute: RastrearRoute,
   ComprovanteIdRoute: ComprovanteIdRoute,
+  EtiquetaIdRoute: EtiquetaIdRoute,
   ProdutoIdRoute: ProdutoIdRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
