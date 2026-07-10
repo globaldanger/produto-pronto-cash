@@ -38,6 +38,61 @@ function fmtBRL(n: number) {
   return Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function KanbanBoard({ orders, onMove }: { orders: Order[]; onMove: (id: string, status: Status) => void }) {
+  const cols: Status[] = ["pending", "paid", "shipped", "delivered", "cancelled", "refunded"];
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-4">
+      {cols.map((col) => {
+        const list = orders.filter((o) => o.status === col);
+        return (
+          <div
+            key={col}
+            className="min-w-[260px] flex-1 rounded-xl border border-border bg-surface p-3"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              const id = e.dataTransfer.getData("text/plain");
+              if (id) onMove(id, col);
+            }}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-bold">{LABEL[col]}</h3>
+              <span className="rounded-full bg-card px-2 py-0.5 text-[10px] font-bold text-muted-foreground">{list.length}</span>
+            </div>
+            <div className="space-y-2">
+              {list.map((o) => (
+                <div
+                  key={o.id}
+                  draggable
+                  onDragStart={(e) => e.dataTransfer.setData("text/plain", o.id)}
+                  className="cursor-grab rounded-lg border border-border bg-card p-3 text-xs active:cursor-grabbing hover:border-primary"
+                >
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted-foreground">#{o.id.slice(0, 8)}</span>
+                    <span className="text-[10px] uppercase text-muted-foreground">{o.channel === "fisica" ? "Física" : "Online"}</span>
+                  </div>
+                  <div className="truncate font-semibold">{o.customer_name ?? "Cliente"}</div>
+                  <div className="text-[11px] text-muted-foreground">{o.customer_phone ?? ""}</div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="font-bold text-primary">{fmtBRL(Number(o.total))}</span>
+                    <span className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleDateString("pt-BR")}</span>
+                  </div>
+                  <div className="mt-2 flex gap-1">
+                    <a href={`/comprovante/${o.id}`} target="_blank" rel="noreferrer" className="rounded border border-border px-2 py-0.5 text-[10px] hover:border-primary"><i className="fa-solid fa-print" /></a>
+                    <a href={`/etiqueta/${o.id}`} target="_blank" rel="noreferrer" className="rounded border border-border px-2 py-0.5 text-[10px] hover:border-primary"><i className="fa-solid fa-tag" /></a>
+                  </div>
+                </div>
+              ))}
+              {list.length === 0 && (
+                <div className="rounded border border-dashed border-border p-3 text-center text-[11px] text-muted-foreground">Arraste aqui</div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function OrdersPage() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
