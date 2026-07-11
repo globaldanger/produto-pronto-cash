@@ -19,6 +19,7 @@ const NAV: { to: string; icon: string; label: string; exact?: boolean; perm: Per
   { to: "/admin/pdv", icon: "fa-cash-register", label: "PDV (Balcão)", perm: "pdv" },
   { to: "/admin/sales", icon: "fa-dollar-sign", label: "Vendas", perm: "sales" },
   { to: "/admin/products", icon: "fa-box", label: "Produtos", perm: "products" },
+  { to: "/admin/media", icon: "fa-images", label: "Mídia", perm: "media" },
   { to: "/admin/categories", icon: "fa-tags", label: "Categorias", perm: "categories" },
   { to: "/admin/orders", icon: "fa-shopping-cart", label: "Pedidos", perm: "orders.view" },
   { to: "/admin/coupons", icon: "fa-ticket", label: "Cupons", perm: "coupons" },
