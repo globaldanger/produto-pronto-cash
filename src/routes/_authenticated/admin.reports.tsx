@@ -43,20 +43,40 @@ function fmtBRL(n: number) {
 }
 
 function ReportsPage() {
-  const [range, setRange] = useState("30");
+  const today = new Date();
+  const defaultFrom = new Date();
+  defaultFrom.setDate(defaultFrom.getDate() - 30);
 
-  const since = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - Number(range));
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString();
-  }, [range]);
+  const [from, setFrom] = useState<string>(defaultFrom.toISOString().slice(0, 10));
+  const [to, setTo] = useState<string>(today.toISOString().slice(0, 10));
+
+  const range = useMemo(() => {
+    const start = new Date(`${from}T00:00:00`);
+    const end = new Date(`${to}T23:59:59.999`);
+    return {
+      startISO: start.toISOString(),
+      endISO: end.toISOString(),
+      days: Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000)),
+    };
+  }, [from, to]);
+
+  function setPreset(days: number) {
+    const t = new Date();
+    const f = new Date();
+    f.setDate(f.getDate() - days + 1);
+    setFrom(f.toISOString().slice(0, 10));
+    setTo(t.toISOString().slice(0, 10));
+  }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "reports", range],
+    queryKey: ["admin", "reports", from, to],
     queryFn: async () => {
       const [{ data: orders }, { data: items }] = await Promise.all([
-        supabase.from("orders").select("id,total,status,channel,created_at,paid_at").gte("created_at", since),
+        supabase
+          .from("orders")
+          .select("id,total,status,channel,created_at,paid_at")
+          .gte("created_at", range.startISO)
+          .lte("created_at", range.endISO),
         supabase.from("order_items").select("order_id,product_id,product_name,quantity,unit_price"),
       ]);
       return { orders: (orders ?? []) as Order[], items: (items ?? []) as Item[] };
@@ -70,9 +90,9 @@ function ReportsPage() {
   // Vendas por dia
   const daily = useMemo(() => {
     const map = new Map<string, { date: string; receita: number; pedidos: number }>();
-    const days = Number(range);
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
+    const start = new Date(`${from}T00:00:00`);
+    for (let i = 0; i < range.days; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
       const k = d.toISOString().slice(0, 10);
       map.set(k, { date: k, receita: 0, pedidos: 0 });
     }
@@ -82,7 +102,7 @@ function ReportsPage() {
       if (row) { row.receita += Number(o.total); row.pedidos += 1; }
     });
     return [...map.values()].map((r) => ({ ...r, label: r.date.slice(5) }));
-  }, [paidOrders, range]);
+  }, [paidOrders, from, range.days]);
 
   // Top produtos
   const topProducts = useMemo(() => {
@@ -118,44 +138,98 @@ function ReportsPage() {
   const ticketMedio = paidOrders.length > 0 ? totalReceita / paidOrders.length : 0;
   const conversao = orders.length > 0 ? (paidOrders.length / orders.length) * 100 : 0;
 
-  function exportCSV() {
-    const rows = [
-      ["ID", "Data", "Cliente", "Status", "Canal", "Total"].join(","),
-      ...orders.map((o) => [
-        o.id,
-        new Date(o.created_at).toLocaleString("pt-BR"),
-        "",
-        o.status,
-        o.channel ?? "",
-        Number(o.total).toFixed(2),
-      ].join(",")),
-    ].join("\n");
-    const blob = new Blob([rows], { type: "text/csv;charset=utf-8" });
+  function downloadCSV(name: string, rows: (string | number)[][]) {
+    const escape = (v: string | number) => {
+      const s = String(v ?? "");
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = rows.map((r) => r.map(escape).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `relatorio-${range}d-${Date.now()}.csv`;
+    a.download = `${name}-${from}_a_${to}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
+  function exportReceita() {
+    downloadCSV("receita-por-dia", [
+      ["Data", "Receita (R$)", "Pedidos"],
+      ...daily.map((d) => [d.date, d.receita.toFixed(2), d.pedidos]),
+      ["TOTAL", totalReceita.toFixed(2), paidOrders.length],
+    ]);
+  }
+
+  function exportPedidos() {
+    downloadCSV("pedidos", [
+      ["ID", "Data", "Status", "Canal", "Pago em", "Total (R$)"],
+      ...orders.map((o) => [
+        o.id,
+        new Date(o.created_at).toLocaleString("pt-BR"),
+        o.status,
+        o.channel ?? "",
+        o.paid_at ? new Date(o.paid_at).toLocaleString("pt-BR") : "",
+        Number(o.total).toFixed(2),
+      ]),
+    ]);
+  }
+
+  function exportTopProdutos() {
+    downloadCSV("top-produtos", [
+      ["#", "Produto", "Quantidade", "Receita (R$)"],
+      ...topProducts.map((p, i) => [i + 1, p.name, p.quantidade, p.receita.toFixed(2)]),
+    ]);
+  }
+
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl">Relatórios</h1>
-          <p className="text-sm text-muted-foreground">Métricas de vendas, produtos e desempenho.</p>
+      <header className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="font-display text-3xl">Relatórios</h1>
+            <p className="text-sm text-muted-foreground">
+              Filtre por período e exporte os dados em CSV.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {RANGES.map((r) => (
+              <button
+                key={r.key}
+                onClick={() => setPreset(Number(r.key))}
+                className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:border-primary hover:text-primary"
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {RANGES.map((r) => (
-            <button key={r.key} onClick={() => setRange(r.key)}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${range === r.key ? "bg-primary text-primary-foreground" : "border border-border hover:border-primary"}`}>
-              {r.label}
+        <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">De</label>
+            <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)}
+              className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm" />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Até</label>
+            <input type="date" value={to} min={from} max={today.toISOString().slice(0, 10)}
+              onChange={(e) => setTo(e.target.value)}
+              className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm" />
+          </div>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <button onClick={exportReceita}
+              className="rounded-md border border-border px-3 py-2 text-xs hover:border-primary hover:text-primary">
+              <i className="fa-solid fa-file-csv mr-1 text-primary" /> Receita por dia
             </button>
-          ))}
-          <button onClick={exportCSV} className="rounded-md border border-border px-3 py-1.5 text-xs hover:border-primary">
-            <i className="fa-solid fa-download mr-1" /> CSV
-          </button>
+            <button onClick={exportPedidos}
+              className="rounded-md border border-border px-3 py-2 text-xs hover:border-primary hover:text-primary">
+              <i className="fa-solid fa-file-csv mr-1 text-primary" /> Pedidos
+            </button>
+            <button onClick={exportTopProdutos}
+              className="rounded-md border border-border px-3 py-2 text-xs hover:border-primary hover:text-primary">
+              <i className="fa-solid fa-file-csv mr-1 text-primary" /> Top produtos
+            </button>
+          </div>
         </div>
       </header>
 
