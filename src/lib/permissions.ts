@@ -21,16 +21,18 @@ export type Permission =
   | "coupons"
   | "themes"
   | "reports"
-  | "media";
+  | "media"
+  | "audit"
+  | "payments";
 
 const MATRIX: Record<Role, Permission[]> = {
   admin: [
     "dashboard","pdv","products","categories","orders.view","orders.status",
     "orders.cancel","orders.refund","orders.edit_items","sales","finance",
     "content","settings","backup","users","coupons","themes","reports",
-    "media",
+    "media","audit","payments",
   ],
-  funcionario: ["dashboard","pdv","products","categories","orders.view","orders.status","coupons","reports","media"],
+  funcionario: ["dashboard","pdv","products","categories","orders.view","orders.status","coupons","reports","media","payments"],
   cliente: [],
 };
 
