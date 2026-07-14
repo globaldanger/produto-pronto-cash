@@ -55,7 +55,7 @@ export const logAudit = createServerFn({ method: "POST" })
         action: data.action,
         entity_type: data.entity_type ?? null,
         entity_id: data.entity_id ?? null,
-        details: data.details ?? {},
+        details: (data.details ?? {}) as never,
         ip,
       });
     } catch (e) {
