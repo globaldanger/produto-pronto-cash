@@ -258,6 +258,15 @@ export const updateOrderItems = createServerFn({ method: "POST" })
     await supabaseAdmin.from("orders").update({
       total, discount, notes: data.notes ?? undefined,
     }).eq("id", data.orderId);
+    const actorEmail = (context.claims as Record<string, unknown> | undefined)?.email as string | undefined;
+    await writeAudit(
+      context.userId,
+      actorEmail ?? null,
+      "order.edit",
+      "order",
+      data.orderId,
+      { total, discount, item_count: data.items.length },
+    );
 
     // Adjust stock if order already debited from stock
     if (isClosed) {
