@@ -230,7 +230,6 @@ function PaymentsPage() {
                     <td className="px-4 py-3">
                       <Link
                         to="/admin/orders"
-                        search={{ id: r.id } as never}
                         className="text-primary hover:underline"
                       >
                         <i className="fa-solid fa-arrow-up-right-from-square mr-1" />
