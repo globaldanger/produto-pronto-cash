@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { cancelOrder, refundOrder, deleteOrder, verifyOrderPayment } from "@/lib/payments.functions";
 import { updateOrderItems } from "@/lib/admin.functions";
+import { logAudit } from "@/lib/audit.functions";
 import { usePermissions } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
@@ -125,6 +126,7 @@ function OrdersPage() {
   async function updateStatus(id: string, status: Status) {
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
+    logAudit({ data: { action: "order.status_change", entity_type: "order", entity_id: id, details: { status } } }).catch(() => undefined);
     toast.success("Status atualizado");
     qc.invalidateQueries({ queryKey: ["admin", "orders"] });
   }
@@ -134,6 +136,7 @@ function OrdersPage() {
     if (!reason) return;
     try {
       await doCancel({ data: { orderId: id, reason } });
+      logAudit({ data: { action: "order.cancel", entity_type: "order", entity_id: id, details: { reason } } }).catch(() => undefined);
       toast.success("Venda cancelada — estoque devolvido");
       qc.invalidateQueries({ queryKey: ["admin", "orders"] });
     } catch (e) {
@@ -146,6 +149,7 @@ function OrdersPage() {
     if (!confirm("Confirmar reembolso? O estoque será devolvido.")) return;
     try {
       await doRefund({ data: { orderId: id, reason } });
+      logAudit({ data: { action: "order.refund", entity_type: "order", entity_id: id, details: { reason } } }).catch(() => undefined);
       toast.success("Pedido reembolsado");
       qc.invalidateQueries({ queryKey: ["admin", "orders"] });
     } catch (e) {
@@ -157,6 +161,7 @@ function OrdersPage() {
     if (!confirm("Apagar este pedido permanentemente? Esta ação não pode ser desfeita.")) return;
     try {
       await doDelete({ data: { orderId: id } });
+      logAudit({ data: { action: "order.delete", entity_type: "order", entity_id: id } }).catch(() => undefined);
       toast.success("Pedido apagado");
       qc.invalidateQueries({ queryKey: ["admin", "orders"] });
     } catch (e) {
