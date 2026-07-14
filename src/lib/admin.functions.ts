@@ -9,6 +9,35 @@ async function assertAdmin(ctx: { supabase: any; userId: string }) {
   if (!data) throw new Error("Acesso restrito a administradores");
 }
 
+async function writeAudit(
+  actorId: string,
+  actorEmail: string | null,
+  action: string,
+  entity_type: string,
+  entity_id: string,
+  details: Record<string, unknown> = {},
+) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", actorId)
+      .maybeSingle();
+    await supabaseAdmin.from("audit_logs").insert({
+      user_id: actorId,
+      user_email: actorEmail,
+      user_name: prof?.full_name ?? null,
+      action,
+      entity_type,
+      entity_id,
+      details: details as never,
+    });
+  } catch (e) {
+    console.error("[audit-internal]", e);
+  }
+}
+
 export const listUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -54,6 +83,15 @@ export const setUserRole = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
     await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: data.role });
+    const actorEmail = (context.claims as Record<string, unknown> | undefined)?.email as string | undefined;
+    await writeAudit(
+      context.userId,
+      actorEmail ?? null,
+      "user.role_change",
+      "user",
+      data.userId,
+      { role: data.role },
+    );
     return { ok: true };
   });
 
