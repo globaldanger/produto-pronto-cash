@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logAudit } from "@/lib/audit.functions";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -131,6 +132,11 @@ function RootComponent() {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
         router.invalidate();
         if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      }
+      if (event === "SIGNED_IN") {
+        logAudit({ data: { action: "login", entity_type: "auth" } }).catch(() => undefined);
+      } else if (event === "SIGNED_OUT") {
+        logAudit({ data: { action: "logout", entity_type: "auth" } }).catch(() => undefined);
       }
     });
     return () => sub.subscription.unsubscribe();
