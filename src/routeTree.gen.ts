@@ -31,6 +31,7 @@ import { Route as AuthenticatedAdminSalesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
 import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authenticated/admin.products'
 import { Route as AuthenticatedAdminPdvRouteImport } from './routes/_authenticated/admin.pdv'
+import { Route as AuthenticatedAdminPaymentsRouteImport } from './routes/_authenticated/admin.payments'
 import { Route as AuthenticatedAdminOrdersRouteImport } from './routes/_authenticated/admin.orders'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
 import { Route as AuthenticatedAdminFinanceRouteImport } from './routes/_authenticated/admin.finance'
@@ -153,6 +154,12 @@ const AuthenticatedAdminPdvRoute = AuthenticatedAdminPdvRouteImport.update({
   path: '/pdv',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminPaymentsRoute =
+  AuthenticatedAdminPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminOrdersRoute =
   AuthenticatedAdminOrdersRouteImport.update({
     id: '/orders',
@@ -220,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
@@ -250,6 +258,7 @@ export interface FileRoutesByTo {
   '/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
@@ -283,6 +292,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/finance': typeof AuthenticatedAdminFinanceRoute
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/orders': typeof AuthenticatedAdminOrdersRoute
+  '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/_authenticated/admin/pdv': typeof AuthenticatedAdminPdvRoute
   '/_authenticated/admin/products': typeof AuthenticatedAdminProductsRoute
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/finance'
     | '/admin/media'
     | '/admin/orders'
+    | '/admin/payments'
     | '/admin/pdv'
     | '/admin/products'
     | '/admin/reports'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/admin/finance'
     | '/admin/media'
     | '/admin/orders'
+    | '/admin/payments'
     | '/admin/pdv'
     | '/admin/products'
     | '/admin/reports'
@@ -378,6 +390,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/finance'
     | '/_authenticated/admin/media'
     | '/_authenticated/admin/orders'
+    | '/_authenticated/admin/payments'
     | '/_authenticated/admin/pdv'
     | '/_authenticated/admin/products'
     | '/_authenticated/admin/reports'
@@ -560,6 +573,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminPdvRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/payments': {
+      id: '/_authenticated/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AuthenticatedAdminPaymentsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/orders': {
       id: '/_authenticated/admin/orders'
       path: '/orders'
@@ -628,6 +648,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminFinanceRoute: typeof AuthenticatedAdminFinanceRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminOrdersRoute: typeof AuthenticatedAdminOrdersRoute
+  AuthenticatedAdminPaymentsRoute: typeof AuthenticatedAdminPaymentsRoute
   AuthenticatedAdminPdvRoute: typeof AuthenticatedAdminPdvRoute
   AuthenticatedAdminProductsRoute: typeof AuthenticatedAdminProductsRoute
   AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
@@ -647,6 +668,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminFinanceRoute: AuthenticatedAdminFinanceRoute,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminOrdersRoute: AuthenticatedAdminOrdersRoute,
+  AuthenticatedAdminPaymentsRoute: AuthenticatedAdminPaymentsRoute,
   AuthenticatedAdminPdvRoute: AuthenticatedAdminPdvRoute,
   AuthenticatedAdminProductsRoute: AuthenticatedAdminProductsRoute,
   AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
