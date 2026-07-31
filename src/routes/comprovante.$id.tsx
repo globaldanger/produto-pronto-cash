@@ -9,6 +9,7 @@ export const Route = createFileRoute("/comprovante/$id")({
 
 type Order = {
   id: string;
+  tracking_code: string | null;
   total: number;
   discount: number;
   status: string;
@@ -17,6 +18,9 @@ type Order = {
   customer_name: string | null;
   customer_phone: string | null;
   customer_address: string | null;
+  customer_cpf: string | null;
+  warranty_text: string | null;
+  warranty_days: number | null;
   notes: string | null;
   created_at: string;
   paid_at: string | null;
@@ -109,6 +113,12 @@ function ReceiptPage() {
             <span>Pedido:</span>
             <span>#{order.id.slice(0, 8)}</span>
           </div>
+          {order.tracking_code && (
+            <div className="flex justify-between">
+              <span>Rastreio:</span>
+              <span className="font-bold">{order.tracking_code}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span>Data:</span>
             <span>{new Date(order.paid_at ?? order.created_at).toLocaleString("pt-BR")}</span>
@@ -122,6 +132,15 @@ function ReceiptPage() {
               <span>Telefone:</span>
               <span>{order.customer_phone}</span>
             </div>
+          )}
+          {order.customer_cpf && (
+            <div className="flex justify-between">
+              <span>CPF:</span>
+              <span>{order.customer_cpf}</span>
+            </div>
+          )}
+          {order.customer_address && (
+            <div className="mt-1 leading-tight">End.: {order.customer_address}</div>
           )}
           <div className="my-3 border-t border-dashed border-neutral-400" />
           <div className="font-semibold">ITENS</div>
@@ -163,6 +182,15 @@ function ReceiptPage() {
             <>
               <div className="my-2 border-t border-dashed border-neutral-400" />
               <div>Obs: {order.notes}</div>
+            </>
+          )}
+          {order.warranty_text && (
+            <>
+              <div className="my-2 border-t border-dashed border-neutral-400" />
+              <div className="font-semibold">
+                GARANTIA{order.warranty_days ? ` — ${order.warranty_days} DIAS` : ""}
+              </div>
+              <div className="leading-tight">{order.warranty_text}</div>
             </>
           )}
           <div className="my-3 border-t border-dashed border-neutral-400" />

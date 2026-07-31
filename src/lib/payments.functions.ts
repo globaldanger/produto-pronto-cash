@@ -367,10 +367,17 @@ async function markOrderPaid(orderId: string) {
 
 type AdminSaleInput = {
   items: { productId: string; quantity: number; unitPrice?: number }[];
-  customer: { name?: string; phone?: string };
+  customer: { name?: string; phone?: string; cpf?: string };
+  customer_id?: string | null;
   payment_method: string;
   discount?: number;
   notes?: string;
+  warranty_text?: string;
+  warranty_days?: number | null;
+  /** Valor pago agora; o restante vira dívida (fiado) no crédito do cliente. */
+  amount_paid?: number;
+  /** Usa o saldo positivo (crédito pré-pago) do cliente para abater o total. */
+  use_credit?: number;
 };
 
 export const createPhysicalSale = createServerFn({ method: "POST" })
@@ -409,19 +416,54 @@ export const createPhysicalSale = createServerFn({ method: "POST" })
     const discount = Number(data.discount ?? 0);
     const total = Math.max(0, subtotal - discount);
 
+    // ---- Crédito / fiado do cliente ----
+    const customerId = data.customer_id || null;
+    const useCredit = Math.max(0, Number(data.use_credit ?? 0));
+    const paid = data.amount_paid == null ? total : Math.max(0, Number(data.amount_paid));
+    const due = Math.max(0, total - useCredit - paid);
+
+    if ((useCredit > 0 || due > 0) && !customerId)
+      throw new Error("Selecione um cliente para usar crédito ou vender fiado");
+
+    let customer: { id: string; name: string; credit_limit: number } | null = null;
+    if (customerId) {
+      const { data: c } = await supabaseAdmin
+        .from("customers")
+        .select("id,name,credit_limit")
+        .eq("id", customerId)
+        .maybeSingle();
+      if (!c) throw new Error("Cliente não encontrado");
+      customer = { id: c.id, name: c.name, credit_limit: Number(c.credit_limit ?? 0) };
+
+      const { data: bal } = await supabaseAdmin.rpc("customer_balance", { _customer_id: customerId });
+      const balance = Number(bal ?? 0);
+      if (useCredit > balance)
+        throw new Error(`Crédito insuficiente. Saldo disponível: R$ ${Math.max(0, balance).toFixed(2)}`);
+      if (due > 0) {
+        const limit = Number(customer.credit_limit ?? 0);
+        const newDebt = Math.max(0, -(balance - useCredit - due));
+        if (limit > 0 && newDebt > limit)
+          throw new Error(`Limite de fiado excedido (limite R$ ${limit.toFixed(2)})`);
+      }
+    }
+
     const { data: order, error } = await supabaseAdmin
       .from("orders")
       .insert({
         user_id: context.userId,
-        customer_name: data.customer.name || "Balcão",
+        customer_id: customerId,
+        customer_name: data.customer.name || customer?.name || "Balcão",
         customer_phone: data.customer.phone || "—",
+        customer_cpf: data.customer.cpf || null,
+        warranty_text: data.warranty_text || null,
+        warranty_days: data.warranty_days ?? null,
         total,
         discount,
-        status: "paid",
+        status: due > 0 ? "pending" : "paid",
         channel: "fisica",
         payment_method: data.payment_method,
         notes: data.notes ?? null,
-        paid_at: new Date().toISOString(),
+        paid_at: due > 0 ? null : new Date().toISOString(),
       })
       .select()
       .single();
@@ -438,7 +480,45 @@ export const createPhysicalSale = createServerFn({ method: "POST" })
       });
     }
 
-    return { orderId: order.id };
+    if (customerId) {
+      const entries: {
+        customer_id: string;
+        order_id: string;
+        amount: number;
+        kind: string;
+        description: string;
+        created_by: string;
+      }[] = [];
+      if (useCredit > 0)
+        entries.push({
+          customer_id: customerId,
+          order_id: order.id,
+          amount: -useCredit,
+          kind: "uso_credito",
+          description: `Crédito usado na venda #${order.id.slice(0, 8)}`,
+          created_by: context.userId,
+        });
+      if (due > 0)
+        entries.push({
+          customer_id: customerId,
+          order_id: order.id,
+          amount: -due,
+          kind: "fiado",
+          description: `Venda fiado #${order.id.slice(0, 8)}`,
+          created_by: context.userId,
+        });
+      if (entries.length) await supabaseAdmin.from("customer_ledger").insert(entries);
+    }
+
+    await supabaseAdmin.from("order_tracking_events").insert({
+      order_id: order.id,
+      status: due > 0 ? "pending" : "paid",
+      description: due > 0 ? "Venda no balcão registrada (fiado)" : "Venda no balcão concluída",
+      location: "Loja física",
+      created_by: context.userId,
+    });
+
+    return { orderId: order.id, trackingCode: order.tracking_code as string, due };
   });
 
 export const cancelOrder = createServerFn({ method: "POST" })
