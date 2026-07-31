@@ -90,13 +90,18 @@ export const createPixCheckout = createServerFn({ method: "POST" })
       total = Math.max(0, subtotal - couponDiscount);
     }
 
-    // Load MP token from store_settings
+    // Load MP token from server-only secrets table
     const { data: settings } = await supabaseAdmin
       .from("store_settings")
-      .select("mercadopago_access_token,store_name")
+      .select("store_name")
       .limit(1)
       .maybeSingle();
-    const token = settings?.mercadopago_access_token?.trim();
+    const { data: secrets } = await supabaseAdmin
+      .from("store_secrets")
+      .select("mercadopago_access_token")
+      .limit(1)
+      .maybeSingle();
+    const token = secrets?.mercadopago_access_token?.trim();
     if (!token) {
       throw new Error(
         "Mercado Pago não configurado. Acesse Configurações no painel admin e informe o Access Token.",
@@ -244,12 +249,12 @@ export const checkPaymentStatus = createServerFn({ method: "POST" })
     if (order.status === "paid") return { status: "paid" as const };
     if (!order.mp_payment_id) return { status: order.status };
 
-    const { data: settings } = await supabaseAdmin
-      .from("store_settings")
+    const { data: secrets } = await supabaseAdmin
+      .from("store_secrets")
       .select("mercadopago_access_token")
       .limit(1)
       .maybeSingle();
-    const token = settings?.mercadopago_access_token?.trim();
+    const token = secrets?.mercadopago_access_token?.trim();
     if (!token) return { status: order.status };
 
     const r = await fetch(`https://api.mercadopago.com/v1/payments/${order.mp_payment_id}`, {
@@ -286,12 +291,12 @@ export const verifyOrderPayment = createServerFn({ method: "POST" })
     if (!order) throw new Error("Pedido não encontrado");
     if (order.status === "paid") return { status: "paid" as const, info: "Pedido já estava pago" };
 
-    const { data: settings } = await supabaseAdmin
-      .from("store_settings")
+    const { data: secrets } = await supabaseAdmin
+      .from("store_secrets")
       .select("mercadopago_access_token")
       .limit(1)
       .maybeSingle();
-    const token = settings?.mercadopago_access_token?.trim();
+    const token = secrets?.mercadopago_access_token?.trim();
     if (!token) throw new Error("Mercado Pago não configurado");
 
     // Try direct payment id first; otherwise search by external_reference
