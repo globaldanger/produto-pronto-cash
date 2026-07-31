@@ -215,6 +215,117 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          description: string | null
+          id: string
+          kind: string
+          order_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          description?: string | null
+          id?: string
+          kind?: string
+          order_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_ledger_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          cep: string | null
+          city: string | null
+          complement: string | null
+          cpf: string | null
+          created_at: string
+          created_by: string | null
+          credit_limit: number
+          email: string | null
+          id: string
+          name: string
+          neighborhood: string | null
+          notes: string | null
+          number: string | null
+          phone: string | null
+          state: string | null
+          street: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cep?: string | null
+          city?: string | null
+          complement?: string | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_limit?: number
+          email?: string | null
+          id?: string
+          name: string
+          neighborhood?: string | null
+          notes?: string | null
+          number?: string | null
+          phone?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cep?: string | null
+          city?: string | null
+          complement?: string | null
+          cpf?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_limit?: number
+          email?: string | null
+          id?: string
+          name?: string
+          neighborhood?: string | null
+          notes?: string | null
+          number?: string | null
+          phone?: string | null
+          state?: string | null
+          street?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       expenses: {
         Row: {
           amount: number
@@ -363,6 +474,44 @@ export type Database = {
           },
         ]
       }
+      order_tracking_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          location: string | null
+          order_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          order_id: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          order_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_tracking_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           cancel_reason: string | null
@@ -370,6 +519,8 @@ export type Database = {
           coupon_code: string | null
           created_at: string
           customer_address: string | null
+          customer_cpf: string | null
+          customer_id: string | null
           customer_name: string | null
           customer_phone: string | null
           delivery_type: string
@@ -399,8 +550,11 @@ export type Database = {
           shipping_street: string | null
           status: Database["public"]["Enums"]["order_status"]
           total: number
+          tracking_code: string | null
           updated_at: string
           user_id: string
+          warranty_days: number | null
+          warranty_text: string | null
         }
         Insert: {
           cancel_reason?: string | null
@@ -408,6 +562,8 @@ export type Database = {
           coupon_code?: string | null
           created_at?: string
           customer_address?: string | null
+          customer_cpf?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_type?: string
@@ -437,8 +593,11 @@ export type Database = {
           shipping_street?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total: number
+          tracking_code?: string | null
           updated_at?: string
           user_id: string
+          warranty_days?: number | null
+          warranty_text?: string | null
         }
         Update: {
           cancel_reason?: string | null
@@ -446,6 +605,8 @@ export type Database = {
           coupon_code?: string | null
           created_at?: string
           customer_address?: string | null
+          customer_cpf?: string | null
+          customer_id?: string | null
           customer_name?: string | null
           customer_phone?: string | null
           delivery_type?: string
@@ -475,10 +636,21 @@ export type Database = {
           shipping_street?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           total?: number
+          tracking_code?: string | null
           updated_at?: string
           user_id?: string
+          warranty_days?: number | null
+          warranty_text?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_reviews: {
         Row: {
@@ -883,10 +1055,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      customer_balance: { Args: { _customer_id: string }; Returns: number }
       decrement_stock: {
         Args: { _product_id: string; _qty: number }
         Returns: undefined
       }
+      gen_tracking_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
