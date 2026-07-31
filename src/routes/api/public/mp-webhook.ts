@@ -47,12 +47,12 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          const { data: settings } = await supabaseAdmin
-            .from("store_settings")
+          const { data: secrets } = await supabaseAdmin
+            .from("store_secrets")
             .select("mercadopago_access_token")
             .limit(1)
             .maybeSingle();
-          const token = settings?.mercadopago_access_token?.trim();
+          const token = secrets?.mercadopago_access_token?.trim();
           if (!token) return new Response("no token", { status: 200 });
 
           const r = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {

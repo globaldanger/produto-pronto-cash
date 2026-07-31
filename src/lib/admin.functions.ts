@@ -186,7 +186,7 @@ export const getAdminPaymentSecrets = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
-      .from("store_settings")
+      .from("store_secrets")
       .select("id,mercadopago_access_token")
       .limit(1)
       .maybeSingle();
@@ -202,16 +202,12 @@ export const setAdminPaymentSecrets = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: existing } = await supabaseAdmin
-      .from("store_settings")
-      .select("id")
-      .limit(1)
-      .maybeSingle();
-    if (!existing?.id) throw new Error("Configurações não encontradas");
     const { error } = await supabaseAdmin
-      .from("store_settings")
-      .update({ mercadopago_access_token: data.mercadopago_access_token || null })
-      .eq("id", existing.id);
+      .from("store_secrets")
+      .upsert(
+        { id: "default", mercadopago_access_token: data.mercadopago_access_token || null },
+        { onConflict: "id" },
+      );
     if (error) throw new Error(error.message);
     return { ok: true };
   });
