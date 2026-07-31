@@ -433,14 +433,14 @@ export const createPhysicalSale = createServerFn({ method: "POST" })
         .eq("id", customerId)
         .maybeSingle();
       if (!c) throw new Error("Cliente não encontrado");
-      customer = c as typeof customer;
+      customer = { id: c.id, name: c.name, credit_limit: Number(c.credit_limit ?? 0) };
 
       const { data: bal } = await supabaseAdmin.rpc("customer_balance", { _customer_id: customerId });
       const balance = Number(bal ?? 0);
       if (useCredit > balance)
         throw new Error(`Crédito insuficiente. Saldo disponível: R$ ${Math.max(0, balance).toFixed(2)}`);
       if (due > 0) {
-        const limit = Number(customer!.credit_limit ?? 0);
+        const limit = Number(customer.credit_limit ?? 0);
         const newDebt = Math.max(0, -(balance - useCredit - due));
         if (limit > 0 && newDebt > limit)
           throw new Error(`Limite de fiado excedido (limite R$ ${limit.toFixed(2)})`);
