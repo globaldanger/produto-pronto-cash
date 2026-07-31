@@ -656,6 +656,27 @@ export type Database = {
         }
         Relationships: []
       }
+      store_secrets: {
+        Row: {
+          created_at: string
+          id: string
+          mercadopago_access_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mercadopago_access_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mercadopago_access_token?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       store_settings: {
         Row: {
           about_gallery: string[]
@@ -682,7 +703,6 @@ export type Database = {
           id: string
           loyalty_points_per_real: number
           loyalty_real_per_point: number
-          mercadopago_access_token: string | null
           pix_key: string | null
           product_page_extra_info: string | null
           product_page_shipping_text: string | null
@@ -729,7 +749,6 @@ export type Database = {
           id?: string
           loyalty_points_per_real?: number
           loyalty_real_per_point?: number
-          mercadopago_access_token?: string | null
           pix_key?: string | null
           product_page_extra_info?: string | null
           product_page_shipping_text?: string | null
@@ -776,7 +795,6 @@ export type Database = {
           id?: string
           loyalty_points_per_real?: number
           loyalty_real_per_point?: number
-          mercadopago_access_token?: string | null
           pix_key?: string | null
           product_page_extra_info?: string | null
           product_page_shipping_text?: string | null
