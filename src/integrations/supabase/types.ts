@@ -792,6 +792,107 @@ export type Database = {
         }
         Relationships: []
       }
+      service_orders: {
+        Row: {
+          accessories: string | null
+          amount_paid: number
+          brand: string | null
+          code: string
+          color: string | null
+          created_at: string
+          created_by: string | null
+          customer_address: string | null
+          customer_cpf: string | null
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          defect_reported: string | null
+          device: string
+          diagnosis: string | null
+          id: string
+          imei: string | null
+          model: string | null
+          notes: string | null
+          parts_used: string | null
+          price: number
+          service_done: string | null
+          status: string
+          technician: string | null
+          updated_at: string
+          warranty_days: number
+          warranty_start: string
+          warranty_text: string | null
+        }
+        Insert: {
+          accessories?: string | null
+          amount_paid?: number
+          brand?: string | null
+          code?: string
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_cpf?: string | null
+          customer_id?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          defect_reported?: string | null
+          device: string
+          diagnosis?: string | null
+          id?: string
+          imei?: string | null
+          model?: string | null
+          notes?: string | null
+          parts_used?: string | null
+          price?: number
+          service_done?: string | null
+          status?: string
+          technician?: string | null
+          updated_at?: string
+          warranty_days?: number
+          warranty_start?: string
+          warranty_text?: string | null
+        }
+        Update: {
+          accessories?: string | null
+          amount_paid?: number
+          brand?: string | null
+          code?: string
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_cpf?: string | null
+          customer_id?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          defect_reported?: string | null
+          device?: string
+          diagnosis?: string | null
+          id?: string
+          imei?: string | null
+          model?: string | null
+          notes?: string | null
+          parts_used?: string | null
+          price?: number
+          service_done?: string | null
+          status?: string
+          technician?: string | null
+          updated_at?: string
+          warranty_days?: number
+          warranty_start?: string
+          warranty_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipping_rates: {
         Row: {
           active: boolean
@@ -1060,6 +1161,7 @@ export type Database = {
         Args: { _product_id: string; _qty: number }
         Returns: undefined
       }
+      gen_service_code: { Args: never; Returns: string }
       gen_tracking_code: { Args: never; Returns: string }
       has_role: {
         Args: {
