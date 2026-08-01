@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutoIdRouteImport } from './routes/produto.$id'
 import { Route as MeusPedidosIdRouteImport } from './routes/meus-pedidos.$id'
+import { Route as GarantiaIdRouteImport } from './routes/garantia.$id'
 import { Route as EtiquetaIdRouteImport } from './routes/etiqueta.$id'
 import { Route as ComprovanteIdRouteImport } from './routes/comprovante.$id'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -27,6 +28,7 @@ import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-w
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminThemesRouteImport } from './routes/_authenticated/admin.themes'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminServiceRouteImport } from './routes/_authenticated/admin.service'
 import { Route as AuthenticatedAdminSalesRouteImport } from './routes/_authenticated/admin.sales'
 import { Route as AuthenticatedAdminReportsRouteImport } from './routes/_authenticated/admin.reports'
 import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authenticated/admin.products'
@@ -87,6 +89,11 @@ const MeusPedidosIdRoute = MeusPedidosIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => MeusPedidosRoute,
 } as any)
+const GarantiaIdRoute = GarantiaIdRouteImport.update({
+  id: '/garantia/$id',
+  path: '/garantia/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EtiquetaIdRoute = EtiquetaIdRouteImport.update({
   id: '/etiqueta/$id',
   path: '/etiqueta/$id',
@@ -132,6 +139,12 @@ const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminServiceRoute =
+  AuthenticatedAdminServiceRouteImport.update({
+    id: '/service',
+    path: '/service',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminSalesRoute = AuthenticatedAdminSalesRouteImport.update({
@@ -230,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
+  '/garantia/$id': typeof GarantiaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -247,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/sales': typeof AuthenticatedAdminSalesRoute
+  '/admin/service': typeof AuthenticatedAdminServiceRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/themes': typeof AuthenticatedAdminThemesRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -263,6 +278,7 @@ export interface FileRoutesByTo {
   '/rastrear': typeof RastrearRoute
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
+  '/garantia/$id': typeof GarantiaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -280,6 +296,7 @@ export interface FileRoutesByTo {
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/sales': typeof AuthenticatedAdminSalesRoute
+  '/admin/service': typeof AuthenticatedAdminServiceRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/themes': typeof AuthenticatedAdminThemesRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -299,6 +316,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
+  '/garantia/$id': typeof GarantiaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/_authenticated/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -316,6 +334,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/products': typeof AuthenticatedAdminProductsRoute
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/admin/sales': typeof AuthenticatedAdminSalesRoute
+  '/_authenticated/admin/service': typeof AuthenticatedAdminServiceRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/themes': typeof AuthenticatedAdminThemesRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -335,6 +354,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/comprovante/$id'
     | '/etiqueta/$id'
+    | '/garantia/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
@@ -352,6 +372,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/reports'
     | '/admin/sales'
+    | '/admin/service'
     | '/admin/settings'
     | '/admin/themes'
     | '/admin/users'
@@ -368,6 +389,7 @@ export interface FileRouteTypes {
     | '/rastrear'
     | '/comprovante/$id'
     | '/etiqueta/$id'
+    | '/garantia/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
@@ -385,6 +407,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/reports'
     | '/admin/sales'
+    | '/admin/service'
     | '/admin/settings'
     | '/admin/themes'
     | '/admin/users'
@@ -403,6 +426,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/comprovante/$id'
     | '/etiqueta/$id'
+    | '/garantia/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/_authenticated/admin/about'
@@ -420,6 +444,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/products'
     | '/_authenticated/admin/reports'
     | '/_authenticated/admin/sales'
+    | '/_authenticated/admin/service'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/themes'
     | '/_authenticated/admin/users'
@@ -438,6 +463,7 @@ export interface RootRouteChildren {
   RastrearRoute: typeof RastrearRoute
   ComprovanteIdRoute: typeof ComprovanteIdRoute
   EtiquetaIdRoute: typeof EtiquetaIdRoute
+  GarantiaIdRoute: typeof GarantiaIdRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
 }
@@ -507,6 +533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeusPedidosIdRouteImport
       parentRoute: typeof MeusPedidosRoute
     }
+    '/garantia/$id': {
+      id: '/garantia/$id'
+      path: '/garantia/$id'
+      fullPath: '/garantia/$id'
+      preLoaderRoute: typeof GarantiaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/etiqueta/$id': {
       id: '/etiqueta/$id'
       path: '/etiqueta/$id'
@@ -568,6 +601,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/service': {
+      id: '/_authenticated/admin/service'
+      path: '/service'
+      fullPath: '/admin/service'
+      preLoaderRoute: typeof AuthenticatedAdminServiceRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/sales': {
@@ -694,6 +734,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminProductsRoute: typeof AuthenticatedAdminProductsRoute
   AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
   AuthenticatedAdminSalesRoute: typeof AuthenticatedAdminSalesRoute
+  AuthenticatedAdminServiceRoute: typeof AuthenticatedAdminServiceRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminThemesRoute: typeof AuthenticatedAdminThemesRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
@@ -716,6 +757,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminProductsRoute: AuthenticatedAdminProductsRoute,
   AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
   AuthenticatedAdminSalesRoute: AuthenticatedAdminSalesRoute,
+  AuthenticatedAdminServiceRoute: AuthenticatedAdminServiceRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminThemesRoute: AuthenticatedAdminThemesRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
@@ -770,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   RastrearRoute: RastrearRoute,
   ComprovanteIdRoute: ComprovanteIdRoute,
   EtiquetaIdRoute: EtiquetaIdRoute,
+  GarantiaIdRoute: GarantiaIdRoute,
   ProdutoIdRoute: ProdutoIdRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
 }
