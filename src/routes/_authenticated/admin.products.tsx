@@ -227,6 +227,36 @@ function ProductModal({
     await deleteProductImage(url);
   }
 
+  function move(url: string, dir: -1 | 1) {
+    const imgs = [...(form.images ?? [])];
+    const i = imgs.indexOf(url);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= imgs.length) return;
+    [imgs[i], imgs[j]] = [imgs[j], imgs[i]];
+    set("images", imgs);
+  }
+
+  function makeCover(url: string) {
+    const imgs = (form.images ?? []).filter((u) => u !== url);
+    set("images", [url, ...imgs]);
+    toast.success("Definida como capa");
+  }
+
+  async function replaceImg(url: string, file: File | undefined) {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const newUrl = await uploadProductImage(file);
+      set("images", (form.images ?? []).map((u) => (u === url ? newUrl : u)));
+      await deleteProductImage(url);
+      toast.success("Foto substituída");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   async function save() {
     if (!form.name || !form.price) {
       toast.error("Nome e preço são obrigatórios");
@@ -313,15 +343,37 @@ function ProductModal({
         <div className="mt-4">
           <label className="mb-2 block text-sm font-medium">Imagens</label>
           <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {(form.images ?? []).map((url) => (
+            {(form.images ?? []).map((url, idx) => (
               <div key={url} className="group relative aspect-square overflow-hidden rounded border border-border">
                 <img src={url} alt="" className="h-full w-full object-cover" />
-                <button
-                  onClick={() => removeImg(url)}
-                  className="absolute right-1 top-1 rounded bg-destructive px-2 py-1 text-xs text-white opacity-0 transition group-hover:opacity-100"
-                >
-                  <i className="fa-solid fa-trash" />
-                </button>
+                {idx === 0 && (
+                  <span className="absolute left-1 top-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
+                    Capa
+                  </span>
+                )}
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/70 p-1 opacity-0 transition group-hover:opacity-100">
+                  <button onClick={() => move(url, -1)} disabled={idx === 0} title="Mover para a esquerda" className="px-1 text-xs text-white disabled:opacity-30">
+                    <i className="fa-solid fa-arrow-left" />
+                  </button>
+                  <button onClick={() => move(url, 1)} disabled={idx === (form.images ?? []).length - 1} title="Mover para a direita" className="px-1 text-xs text-white disabled:opacity-30">
+                    <i className="fa-solid fa-arrow-right" />
+                  </button>
+                  <button onClick={() => makeCover(url)} disabled={idx === 0} title="Definir como capa" className="px-1 text-xs text-white disabled:opacity-30">
+                    <i className="fa-solid fa-star" />
+                  </button>
+                  <label title="Substituir foto" className="cursor-pointer px-1 text-xs text-white">
+                    <i className="fa-solid fa-rotate" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => replaceImg(url, e.target.files?.[0])}
+                    />
+                  </label>
+                  <button onClick={() => removeImg(url)} title="Excluir foto" className="px-1 text-xs text-destructive">
+                    <i className="fa-solid fa-trash" />
+                  </button>
+                </div>
               </div>
             ))}
             <label className="flex aspect-square cursor-pointer items-center justify-center rounded border-2 border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary">
