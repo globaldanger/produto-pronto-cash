@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutoIdRouteImport } from './routes/produto.$id'
 import { Route as MeusPedidosIdRouteImport } from './routes/meus-pedidos.$id'
+import { Route as GarantiaIdRouteImport } from './routes/garantia.$id'
 import { Route as EtiquetaIdRouteImport } from './routes/etiqueta.$id'
 import { Route as ComprovanteIdRouteImport } from './routes/comprovante.$id'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -87,6 +88,11 @@ const MeusPedidosIdRoute = MeusPedidosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => MeusPedidosRoute,
+} as any)
+const GarantiaIdRoute = GarantiaIdRouteImport.update({
+  id: '/garantia/$id',
+  path: '/garantia/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EtiquetaIdRoute = EtiquetaIdRouteImport.update({
   id: '/etiqueta/$id',
@@ -237,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
+  '/garantia/$id': typeof GarantiaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -271,6 +278,7 @@ export interface FileRoutesByTo {
   '/rastrear': typeof RastrearRoute
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
+  '/garantia/$id': typeof GarantiaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -308,6 +316,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
+  '/garantia/$id': typeof GarantiaIdRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/_authenticated/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -345,6 +354,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/comprovante/$id'
     | '/etiqueta/$id'
+    | '/garantia/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
@@ -379,6 +389,7 @@ export interface FileRouteTypes {
     | '/rastrear'
     | '/comprovante/$id'
     | '/etiqueta/$id'
+    | '/garantia/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/comprovante/$id'
     | '/etiqueta/$id'
+    | '/garantia/$id'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/_authenticated/admin/about'
@@ -451,6 +463,7 @@ export interface RootRouteChildren {
   RastrearRoute: typeof RastrearRoute
   ComprovanteIdRoute: typeof ComprovanteIdRoute
   EtiquetaIdRoute: typeof EtiquetaIdRoute
+  GarantiaIdRoute: typeof GarantiaIdRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
 }
@@ -519,6 +532,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/meus-pedidos/$id'
       preLoaderRoute: typeof MeusPedidosIdRouteImport
       parentRoute: typeof MeusPedidosRoute
+    }
+    '/garantia/$id': {
+      id: '/garantia/$id'
+      path: '/garantia/$id'
+      fullPath: '/garantia/$id'
+      preLoaderRoute: typeof GarantiaIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/etiqueta/$id': {
       id: '/etiqueta/$id'
@@ -792,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   RastrearRoute: RastrearRoute,
   ComprovanteIdRoute: ComprovanteIdRoute,
   EtiquetaIdRoute: EtiquetaIdRoute,
+  GarantiaIdRoute: GarantiaIdRoute,
   ProdutoIdRoute: ProdutoIdRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
 }
