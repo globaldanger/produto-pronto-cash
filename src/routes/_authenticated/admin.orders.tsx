@@ -408,6 +408,8 @@ function OrdersPage() {
           </div>
         </div>
       )}
+
+      {details && <OrderDetailsModal orderId={details} onClose={() => setDetails(null)} />}
     </div>
   );
 }
