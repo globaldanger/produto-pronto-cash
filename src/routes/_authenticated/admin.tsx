@@ -23,6 +23,7 @@ const NAV: { to: string; icon: string; label: string; exact?: boolean; perm: Per
   { to: "/admin/categories", icon: "fa-tags", label: "Categorias", perm: "categories" },
   { to: "/admin/orders", icon: "fa-shopping-cart", label: "Pedidos", perm: "orders.view" },
   { to: "/admin/customers", icon: "fa-address-book", label: "Clientes", perm: "customers" },
+  { to: "/admin/service", icon: "fa-screwdriver-wrench", label: "Ordens de serviço", perm: "service" },
   { to: "/admin/payments", icon: "fa-credit-card", label: "Pagamentos", perm: "payments" },
   { to: "/admin/coupons", icon: "fa-ticket", label: "Cupons", perm: "coupons" },
   { to: "/admin/reports", icon: "fa-chart-column", label: "Relatórios", perm: "reports" },
