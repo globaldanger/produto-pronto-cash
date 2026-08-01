@@ -8,6 +8,7 @@ import { cancelOrder, refundOrder, deleteOrder, verifyOrderPayment } from "@/lib
 import { updateOrderItems } from "@/lib/admin.functions";
 import { logAudit } from "@/lib/audit.functions";
 import { usePermissions } from "@/lib/permissions";
+import { OrderDetailsModal } from "@/components/OrderDetailsModal";
 
 export const Route = createFileRoute("/_authenticated/admin/orders")({
   component: OrdersPage,
@@ -110,6 +111,7 @@ function OrdersPage() {
   const [editNotes, setEditNotes] = useState("");
   const [editDiscount, setEditDiscount] = useState(0);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [details, setDetails] = useState<string | null>(null);
 
   const { data: orders = [] } = useQuery({
     queryKey: ["admin", "orders", filter, channelFilter],
@@ -295,6 +297,13 @@ function OrdersPage() {
                   </td>
                   <td className="px-4 py-3 text-xs">{new Date(o.created_at).toLocaleString("pt-BR")}</td>
                   <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => setDetails(o.id)}
+                      className="mr-1 rounded border border-border px-2 py-1 text-xs hover:border-primary hover:text-primary"
+                      title="Ver mais"
+                    >
+                      <i className="fa-solid fa-eye" />
+                    </button>
                     <a
                       href={`/comprovante/${o.id}`}
                       target="_blank"
