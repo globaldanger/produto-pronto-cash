@@ -606,15 +606,6 @@ function PhotoUploader({
   );
 }
 
-function LegacySection({ title, icon }: { title: string; icon: string }) {
-  return (
-    <div className="mt-6 mb-1 flex items-center gap-2 border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-      <i className={`fa-solid ${icon}`} />
-      {title}
-    </div>
-  );
-}
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mt-3">
