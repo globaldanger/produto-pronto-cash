@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCpf, maskPhone } from "@/lib/cep";
 import { usePermissions } from "@/lib/permissions";
+import { uploadImage } from "@/lib/storage";
 
 export const Route = createFileRoute("/_authenticated/admin/service")({
   component: ServiceOrdersPage,
@@ -37,6 +38,8 @@ type ServiceOrder = {
   technician: string | null;
   notes: string | null;
   created_at: string;
+  photos_in: string[];
+  photos_out: string[];
 };
 
 const STATUS: { value: string; label: string; cls: string }[] = [
@@ -74,6 +77,8 @@ const emptyOrder = (): Partial<ServiceOrder> => ({
   warranty_text: DEFAULT_WARRANTY,
   technician: "",
   notes: "",
+  photos_in: [],
+  photos_out: [],
 });
 
 function statusMeta(v: string) {
@@ -331,6 +336,8 @@ function ServiceModal({
       warranty_text: form.warranty_text || DEFAULT_WARRANTY,
       technician: form.technician || null,
       notes: form.notes || null,
+      photos_in: form.photos_in ?? [],
+      photos_out: form.photos_out ?? [],
     };
     const res = form.id
       ? await supabase.from("service_orders").update(payload).eq("id", form.id)
@@ -493,6 +500,20 @@ function ServiceModal({
         <Field label="Observações internas">
           <textarea rows={2} className="input" value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
         </Field>
+
+        <Section title="Fotos do aparelho" icon="fa-camera" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <PhotoUploader
+            label="Como chegou (entrada)"
+            photos={form.photos_in ?? []}
+            onChange={(v) => set("photos_in", v)}
+          />
+          <PhotoUploader
+            label="Como saiu (após o serviço)"
+            photos={form.photos_out ?? []}
+            onChange={(v) => set("photos_out", v)}
+          />
+        </div>
 
         <div className="mt-6 flex flex-wrap justify-end gap-3">
           {form.id && (
