@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdutoIdRouteImport } from './routes/produto.$id'
 import { Route as MeusPedidosIdRouteImport } from './routes/meus-pedidos.$id'
+import { Route as GarantiaVerificarRouteImport } from './routes/garantia.verificar'
 import { Route as GarantiaIdRouteImport } from './routes/garantia.$id'
 import { Route as EtiquetaIdRouteImport } from './routes/etiqueta.$id'
 import { Route as ComprovanteIdRouteImport } from './routes/comprovante.$id'
@@ -88,6 +89,11 @@ const MeusPedidosIdRoute = MeusPedidosIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => MeusPedidosRoute,
+} as any)
+const GarantiaVerificarRoute = GarantiaVerificarRouteImport.update({
+  id: '/garantia/verificar',
+  path: '/garantia/verificar',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GarantiaIdRoute = GarantiaIdRouteImport.update({
   id: '/garantia/$id',
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
   '/garantia/$id': typeof GarantiaIdRoute
+  '/garantia/verificar': typeof GarantiaVerificarRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -279,6 +286,7 @@ export interface FileRoutesByTo {
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
   '/garantia/$id': typeof GarantiaIdRoute
+  '/garantia/verificar': typeof GarantiaVerificarRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/comprovante/$id': typeof ComprovanteIdRoute
   '/etiqueta/$id': typeof EtiquetaIdRoute
   '/garantia/$id': typeof GarantiaIdRoute
+  '/garantia/verificar': typeof GarantiaVerificarRoute
   '/meus-pedidos/$id': typeof MeusPedidosIdRoute
   '/produto/$id': typeof ProdutoIdRoute
   '/_authenticated/admin/about': typeof AuthenticatedAdminAboutRoute
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
     | '/comprovante/$id'
     | '/etiqueta/$id'
     | '/garantia/$id'
+    | '/garantia/verificar'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
@@ -390,6 +400,7 @@ export interface FileRouteTypes {
     | '/comprovante/$id'
     | '/etiqueta/$id'
     | '/garantia/$id'
+    | '/garantia/verificar'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/admin/about'
@@ -427,6 +438,7 @@ export interface FileRouteTypes {
     | '/comprovante/$id'
     | '/etiqueta/$id'
     | '/garantia/$id'
+    | '/garantia/verificar'
     | '/meus-pedidos/$id'
     | '/produto/$id'
     | '/_authenticated/admin/about'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   ComprovanteIdRoute: typeof ComprovanteIdRoute
   EtiquetaIdRoute: typeof EtiquetaIdRoute
   GarantiaIdRoute: typeof GarantiaIdRoute
+  GarantiaVerificarRoute: typeof GarantiaVerificarRoute
   ProdutoIdRoute: typeof ProdutoIdRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
 }
@@ -532,6 +545,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/meus-pedidos/$id'
       preLoaderRoute: typeof MeusPedidosIdRouteImport
       parentRoute: typeof MeusPedidosRoute
+    }
+    '/garantia/verificar': {
+      id: '/garantia/verificar'
+      path: '/garantia/verificar'
+      fullPath: '/garantia/verificar'
+      preLoaderRoute: typeof GarantiaVerificarRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/garantia/$id': {
       id: '/garantia/$id'
@@ -813,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComprovanteIdRoute: ComprovanteIdRoute,
   EtiquetaIdRoute: EtiquetaIdRoute,
   GarantiaIdRoute: GarantiaIdRoute,
+  GarantiaVerificarRoute: GarantiaVerificarRoute,
   ProdutoIdRoute: ProdutoIdRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
 }

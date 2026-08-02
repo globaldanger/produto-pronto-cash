@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import QRCode from "qrcode";
 
 export const Route = createFileRoute("/garantia/$id")({
   head: () => ({
@@ -49,6 +50,8 @@ type ServiceOrder = {
   warranty_text: string | null;
   technician: string | null;
   created_at: string;
+  photos_in: string[] | null;
+  photos_out: string[] | null;
 };
 
 type Settings = {
@@ -84,6 +87,8 @@ function WarrantyPage() {
   const [os, setOs] = useState<ServiceOrder | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [qr, setQr] = useState<string | null>(null);
+  const [verifyUrl, setVerifyUrl] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -100,6 +105,15 @@ function WarrantyPage() {
       setLoading(false);
     })();
   }, [id]);
+
+  useEffect(() => {
+    if (!os?.code || typeof window === "undefined") return;
+    const url = `${window.location.origin}/garantia/verificar?code=${encodeURIComponent(os.code)}`;
+    setVerifyUrl(url);
+    QRCode.toDataURL(url, { width: 320, margin: 1, errorCorrectionLevel: "M" })
+      .then(setQr)
+      .catch(() => setQr(null));
+  }, [os?.code]);
 
   if (loading) return <div className="p-12 text-center">Carregando comprovante...</div>;
   if (!os) {
@@ -228,10 +242,28 @@ function WarrantyPage() {
             {os.warranty_text && (
               <p className="mt-2 whitespace-pre-line text-xs leading-relaxed">{os.warranty_text}</p>
             )}
-            <p className="mt-2 text-[11px] text-neutral-500">
-              Apresente este comprovante para acionar a garantia. Guarde-o em local seguro.
-            </p>
+            <div className="mt-3 flex items-center gap-4 border-t border-neutral-300 pt-3">
+              {qr && <img src={qr} alt={`QR code de verificação da garantia ${os.code}`} className="h-24 w-24" />}
+              <div className="text-[11px] leading-relaxed text-neutral-600">
+                <strong className="block text-neutral-900">Verifique esta garantia</strong>
+                Aponte a câmera do celular para o QR code ou acesse{" "}
+                <span className="break-all font-mono">{verifyUrl}</span> e informe o código{" "}
+                <strong>{os.code}</strong>. Apresente este comprovante para acionar a garantia.
+              </div>
+            </div>
           </section>
+
+          {((os.photos_in?.length ?? 0) > 0 || (os.photos_out?.length ?? 0) > 0) && (
+            <section className="mt-5">
+              <h2 className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">
+                Registro fotográfico
+              </h2>
+              <div className="mt-2 grid grid-cols-2 gap-4">
+                <PhotoGrid title="Entrada do aparelho" photos={os.photos_in ?? []} />
+                <PhotoGrid title="Saída após o serviço" photos={os.photos_out ?? []} />
+              </div>
+            </section>
+          )}
 
           <section className="mt-12 grid grid-cols-2 gap-10 text-center text-xs">
             <div className="border-t border-neutral-400 pt-2">Assinatura do cliente</div>
@@ -242,5 +274,19 @@ function WarrantyPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function PhotoGrid({ title, photos }: { title: string; photos: string[] }) {
+  if (!photos.length) return null;
+  return (
+    <div>
+      <div className="mb-1 text-[11px] font-semibold text-neutral-700">{title}</div>
+      <div className="grid grid-cols-3 gap-1">
+        {photos.map((p) => (
+          <img key={p} src={p} alt={title} className="aspect-square w-full rounded border border-neutral-200 object-cover" />
+        ))}
+      </div>
+    </div>
   );
 }

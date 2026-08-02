@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCpf, maskPhone } from "@/lib/cep";
 import { usePermissions } from "@/lib/permissions";
+import { uploadImage } from "@/lib/storage";
 
 export const Route = createFileRoute("/_authenticated/admin/service")({
   component: ServiceOrdersPage,
@@ -37,6 +38,8 @@ type ServiceOrder = {
   technician: string | null;
   notes: string | null;
   created_at: string;
+  photos_in: string[];
+  photos_out: string[];
 };
 
 const STATUS: { value: string; label: string; cls: string }[] = [
@@ -74,6 +77,8 @@ const emptyOrder = (): Partial<ServiceOrder> => ({
   warranty_text: DEFAULT_WARRANTY,
   technician: "",
   notes: "",
+  photos_in: [],
+  photos_out: [],
 });
 
 function statusMeta(v: string) {
@@ -331,6 +336,8 @@ function ServiceModal({
       warranty_text: form.warranty_text || DEFAULT_WARRANTY,
       technician: form.technician || null,
       notes: form.notes || null,
+      photos_in: form.photos_in ?? [],
+      photos_out: form.photos_out ?? [],
     };
     const res = form.id
       ? await supabase.from("service_orders").update(payload).eq("id", form.id)
@@ -494,6 +501,20 @@ function ServiceModal({
           <textarea rows={2} className="input" value={form.notes ?? ""} onChange={(e) => set("notes", e.target.value)} />
         </Field>
 
+        <Section title="Fotos do aparelho" icon="fa-camera" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <PhotoUploader
+            label="Como chegou (entrada)"
+            photos={form.photos_in ?? []}
+            onChange={(v) => set("photos_in", v)}
+          />
+          <PhotoUploader
+            label="Como saiu (após o serviço)"
+            photos={form.photos_out ?? []}
+            onChange={(v) => set("photos_out", v)}
+          />
+        </div>
+
         <div className="mt-6 flex flex-wrap justify-end gap-3">
           {form.id && (
             <Link
@@ -525,6 +546,62 @@ function Section({ title, icon }: { title: string; icon: string }) {
     <div className="mt-6 mb-1 flex items-center gap-2 border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
       <i className={`fa-solid ${icon}`} />
       {title}
+    </div>
+  );
+}
+
+function PhotoUploader({
+  label,
+  photos,
+  onChange,
+}: {
+  label: string;
+  photos: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function add(files: FileList | null) {
+    if (!files?.length) return;
+    setBusy(true);
+    try {
+      const urls: string[] = [];
+      for (const f of Array.from(files)) urls.push(await uploadImage(f, "service"));
+      onChange([...photos, ...urls]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha no upload");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-border p-3">
+      <div className="mb-2 text-xs font-medium text-muted-foreground">{label}</div>
+      <div className="grid grid-cols-4 gap-2">
+        {photos.map((p) => (
+          <div key={p} className="group relative">
+            <img src={p} alt={label} className="aspect-square w-full rounded object-cover" />
+            <button
+              type="button"
+              onClick={() => onChange(photos.filter((x) => x !== p))}
+              className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white opacity-0 transition group-hover:opacity-100"
+            >
+              <i className="fa-solid fa-trash" />
+            </button>
+          </div>
+        ))}
+        <label className="flex aspect-square cursor-pointer items-center justify-center rounded border border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary">
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => add(e.target.files)}
+          />
+          <i className={`fa-solid ${busy ? "fa-spinner fa-spin" : "fa-plus"}`} />
+        </label>
+      </div>
     </div>
   );
 }

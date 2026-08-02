@@ -814,6 +814,8 @@ export type Database = {
           model: string | null
           notes: string | null
           parts_used: string | null
+          photos_in: string[]
+          photos_out: string[]
           price: number
           service_done: string | null
           status: string
@@ -844,6 +846,8 @@ export type Database = {
           model?: string | null
           notes?: string | null
           parts_used?: string | null
+          photos_in?: string[]
+          photos_out?: string[]
           price?: number
           service_done?: string | null
           status?: string
@@ -874,6 +878,8 @@ export type Database = {
           model?: string | null
           notes?: string | null
           parts_used?: string | null
+          photos_in?: string[]
+          photos_out?: string[]
           price?: number
           service_done?: string | null
           status?: string
