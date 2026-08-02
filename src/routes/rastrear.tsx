@@ -68,6 +68,11 @@ function TrackPage() {
         </h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Cole o número do pedido recebido após a compra (ex: <code>a1b2c3d4-...</code>).
+          {" "}Tem um conserto?{" "}
+          <Link to="/garantia/verificar" className="text-primary hover:underline">
+            Verificar garantia pelo código da OS
+          </Link>
+          .
         </p>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
