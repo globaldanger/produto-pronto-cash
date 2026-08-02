@@ -550,6 +550,71 @@ function Section({ title, icon }: { title: string; icon: string }) {
   );
 }
 
+function PhotoUploader({
+  label,
+  photos,
+  onChange,
+}: {
+  label: string;
+  photos: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function add(files: FileList | null) {
+    if (!files?.length) return;
+    setBusy(true);
+    try {
+      const urls: string[] = [];
+      for (const f of Array.from(files)) urls.push(await uploadImage(f, "service"));
+      onChange([...photos, ...urls]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha no upload");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-border p-3">
+      <div className="mb-2 text-xs font-medium text-muted-foreground">{label}</div>
+      <div className="grid grid-cols-4 gap-2">
+        {photos.map((p) => (
+          <div key={p} className="group relative">
+            <img src={p} alt={label} className="aspect-square w-full rounded object-cover" />
+            <button
+              type="button"
+              onClick={() => onChange(photos.filter((x) => x !== p))}
+              className="absolute right-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white opacity-0 transition group-hover:opacity-100"
+            >
+              <i className="fa-solid fa-trash" />
+            </button>
+          </div>
+        ))}
+        <label className="flex aspect-square cursor-pointer items-center justify-center rounded border border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary">
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => add(e.target.files)}
+          />
+          <i className={`fa-solid ${busy ? "fa-spinner fa-spin" : "fa-plus"}`} />
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function LegacySection({ title, icon }: { title: string; icon: string }) {
+  return (
+    <div className="mt-6 mb-1 flex items-center gap-2 border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+      <i className={`fa-solid ${icon}`} />
+      {title}
+    </div>
+  );
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mt-3">
