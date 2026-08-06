@@ -457,6 +457,18 @@ function Index() {
         </div>
       </footer>
       <CartDrawer />
+
+      {about?.store_whatsapp && (
+        <a
+          href={`https://wa.me/${String(about.store_whatsapp).replace(/\D/g, "")}`}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Falar com a loja no WhatsApp"
+          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-2xl text-white shadow-xl transition hover:brightness-110"
+        >
+          <i className="fa-brands fa-whatsapp" />
+        </a>
+      )}
     </div>
   );
 }
