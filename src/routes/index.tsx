@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -37,6 +38,8 @@ function fmt(n: number) {
 
 function Index() {
   const theme = useActiveTheme();
+  const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [sort, setSort] = useState<"recent" | "price_asc" | "price_desc">("recent");
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -66,6 +69,17 @@ function Index() {
   const featured = products.filter((p) => p.featured).slice(0, 8);
   const onSale = products.filter((p) => p.sale_price && p.sale_price < p.price).slice(0, 4);
   const newest = products.slice(0, 8);
+
+  const visible = useMemo(() => {
+    const base = activeCat ? products.filter((p) => p.category_id === activeCat) : products;
+    const list = [...base];
+    const value = (p: Product) => p.sale_price ?? p.price;
+    if (sort === "price_asc") list.sort((a, b) => value(a) - value(b));
+    if (sort === "price_desc") list.sort((a, b) => value(b) - value(a));
+    return list;
+  }, [products, activeCat, sort]);
+
+  const gridProducts = activeCat || sort !== "recent" ? visible : featured.length > 0 ? featured : products;
 
   const { data: about } = useQuery({
     queryKey: ["store_about_public"],
@@ -120,7 +134,7 @@ function Index() {
                 href="#produtos"
                 className="rounded-full theme-accent-bg px-6 py-3 text-sm font-semibold shadow-lg transition hover:brightness-110"
               >
-                <i className="fa-solid fa-bolt mr-2" /> {about?.home_hero_cta ?? "Ver produtos"}
+              <i className="fa-solid fa-bolt mr-2" /> {about?.home_hero_cta || "Ver produtos"}
               </a>
               <Link
                 to="/rastrear"
@@ -205,18 +219,30 @@ function Index() {
         <section className="container mx-auto max-w-7xl px-4 py-16">
           <SectionHeader eyebrow="Navegue" title="Categorias" />
           <div className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-            {categories.map((c) => (
-              <a
-                key={c.id}
-                href={`/#produtos`}
-                className="card-hover group flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card p-5"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 theme-accent-text text-xl">
-                  <i className={`fa-solid ${c.icon ?? "fa-tag"}`} />
-                </div>
-                <span className="text-center text-xs font-medium">{c.name}</span>
-              </a>
-            ))}
+            {categories.map((c) => {
+              const isActive = activeCat === c.id;
+              const count = products.filter((p) => p.category_id === c.id).length;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => {
+                    setActiveCat(isActive ? null : c.id);
+                    document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className={`card-hover group flex min-h-11 flex-col items-center gap-3 rounded-2xl border bg-card p-5 transition ${
+                    isActive ? "border-primary ring-1 ring-primary/40" : "border-border/60"
+                  }`}
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border/60 theme-accent-text text-xl">
+                    <i className={`fa-solid ${c.icon ?? "fa-tag"}`} />
+                  </div>
+                  <span className="text-center text-xs font-medium">{c.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{count} {count === 1 ? "item" : "itens"}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
       )}
@@ -250,21 +276,58 @@ function Index() {
 
       {/* PRODUTOS */}
       <section id="produtos" className="container mx-auto max-w-7xl px-4 py-16">
-        <SectionHeader eyebrow="Curadoria" title={featured.length > 0 ? "Em destaque" : "Nossos produtos"} />
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:justify-between">
+          <div className="min-w-0">
+            <SectionHeader
+              eyebrow="Curadoria"
+              title={
+                activeCat
+                  ? categories.find((c) => c.id === activeCat)?.name ?? "Produtos"
+                  : featured.length > 0
+                    ? "Em destaque"
+                    : "Nossos produtos"
+              }
+            />
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <label className="sr-only" htmlFor="ordenar">Ordenar produtos</label>
+            <select
+              id="ordenar"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as typeof sort)}
+              className="min-h-11 rounded-full border border-border/70 bg-card px-4 text-xs font-semibold text-foreground"
+            >
+              <option value="recent">Mais recentes</option>
+              <option value="price_asc">Menor preço</option>
+              <option value="price_desc">Maior preço</option>
+            </select>
+            {activeCat && (
+              <button
+                type="button"
+                onClick={() => setActiveCat(null)}
+                className="text-xs font-semibold theme-accent-text underline-offset-4 hover:underline"
+              >
+                Limpar filtro
+              </button>
+            )}
+          </div>
+        </div>
         {isLoading ? (
           <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="h-72 animate-pulse rounded-2xl border border-border/60 bg-card" />
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : gridProducts.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-border bg-card p-16 text-center">
             <i className="fa-solid fa-box-open mb-3 text-4xl text-muted-foreground" />
-            <p className="text-muted-foreground">Nenhum produto cadastrado ainda.</p>
+            <p className="text-muted-foreground">
+              {activeCat ? "Nenhum produto nesta categoria." : "Nenhum produto cadastrado ainda."}
+            </p>
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {(featured.length > 0 ? featured : products).map((p) => (
+            {gridProducts.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
@@ -394,6 +457,18 @@ function Index() {
         </div>
       </footer>
       <CartDrawer />
+
+      {about?.store_whatsapp && (
+        <a
+          href={`https://wa.me/${String(about.store_whatsapp).replace(/\D/g, "")}`}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Falar com a loja no WhatsApp"
+          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-2xl text-white shadow-xl transition hover:brightness-110"
+        >
+          <i className="fa-brands fa-whatsapp" />
+        </a>
+      )}
     </div>
   );
 }
