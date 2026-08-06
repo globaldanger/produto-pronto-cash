@@ -38,6 +38,8 @@ function fmt(n: number) {
 
 function Index() {
   const theme = useActiveTheme();
+  const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [sort, setSort] = useState<"recent" | "price_asc" | "price_desc">("recent");
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -121,7 +123,7 @@ function Index() {
                 href="#produtos"
                 className="rounded-full theme-accent-bg px-6 py-3 text-sm font-semibold shadow-lg transition hover:brightness-110"
               >
-                <i className="fa-solid fa-bolt mr-2" /> {about?.home_hero_cta ?? "Ver produtos"}
+              <i className="fa-solid fa-bolt mr-2" /> {about?.home_hero_cta || "Ver produtos"}
               </a>
               <Link
                 to="/rastrear"
