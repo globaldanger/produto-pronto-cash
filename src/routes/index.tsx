@@ -276,21 +276,58 @@ function Index() {
 
       {/* PRODUTOS */}
       <section id="produtos" className="container mx-auto max-w-7xl px-4 py-16">
-        <SectionHeader eyebrow="Curadoria" title={featured.length > 0 ? "Em destaque" : "Nossos produtos"} />
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:flex sm:justify-between">
+          <div className="min-w-0">
+            <SectionHeader
+              eyebrow="Curadoria"
+              title={
+                activeCat
+                  ? categories.find((c) => c.id === activeCat)?.name ?? "Produtos"
+                  : featured.length > 0
+                    ? "Em destaque"
+                    : "Nossos produtos"
+              }
+            />
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <label className="sr-only" htmlFor="ordenar">Ordenar produtos</label>
+            <select
+              id="ordenar"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as typeof sort)}
+              className="min-h-11 rounded-full border border-border/70 bg-card px-4 text-xs font-semibold text-foreground"
+            >
+              <option value="recent">Mais recentes</option>
+              <option value="price_asc">Menor preço</option>
+              <option value="price_desc">Maior preço</option>
+            </select>
+            {activeCat && (
+              <button
+                type="button"
+                onClick={() => setActiveCat(null)}
+                className="text-xs font-semibold theme-accent-text underline-offset-4 hover:underline"
+              >
+                Limpar filtro
+              </button>
+            )}
+          </div>
+        </div>
         {isLoading ? (
           <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="h-72 animate-pulse rounded-2xl border border-border/60 bg-card" />
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : gridProducts.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-border bg-card p-16 text-center">
             <i className="fa-solid fa-box-open mb-3 text-4xl text-muted-foreground" />
-            <p className="text-muted-foreground">Nenhum produto cadastrado ainda.</p>
+            <p className="text-muted-foreground">
+              {activeCat ? "Nenhum produto nesta categoria." : "Nenhum produto cadastrado ainda."}
+            </p>
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {(featured.length > 0 ? featured : products).map((p) => (
+            {gridProducts.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
