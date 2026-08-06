@@ -70,6 +70,17 @@ function Index() {
   const onSale = products.filter((p) => p.sale_price && p.sale_price < p.price).slice(0, 4);
   const newest = products.slice(0, 8);
 
+  const visible = useMemo(() => {
+    const base = activeCat ? products.filter((p) => p.category_id === activeCat) : products;
+    const list = [...base];
+    const value = (p: Product) => p.sale_price ?? p.price;
+    if (sort === "price_asc") list.sort((a, b) => value(a) - value(b));
+    if (sort === "price_desc") list.sort((a, b) => value(b) - value(a));
+    return list;
+  }, [products, activeCat, sort]);
+
+  const gridProducts = activeCat || sort !== "recent" ? visible : featured.length > 0 ? featured : products;
+
   const { data: about } = useQuery({
     queryKey: ["store_about_public"],
     queryFn: async () => {
