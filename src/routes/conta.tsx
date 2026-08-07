@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StoreHeader } from "@/components/StoreHeader";
 import { CartDrawer } from "@/components/CartDrawer";
+import { NotificationOptIn } from "@/components/NotificationOptIn";
 
 export const Route = createFileRoute("/conta")({
   head: () => ({ meta: [{ title: "Minha conta — SmartCell" }] }),
@@ -85,6 +86,10 @@ function AccountPage() {
             </span>
           </div>
         </header>
+
+        <div className="mb-6">
+          <NotificationOptIn />
+        </div>
 
         <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
           <nav className="space-y-1 self-start rounded-2xl border border-border bg-card p-3">

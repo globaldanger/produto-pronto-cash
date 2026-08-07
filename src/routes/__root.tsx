@@ -15,6 +15,7 @@ import { logAudit } from "@/lib/audit.functions";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { useActiveTheme, ThemeDecorationLayer } from "@/lib/theme";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 
 function NotFoundComponent() {
   return (
@@ -160,6 +161,7 @@ function RootComponent() {
 
 function ThemedShell() {
   const theme = useActiveTheme();
+  useRealtimeNotifications();
   return (
     <>
       {theme && theme.key !== "default" && theme.decoration !== "none" && (
