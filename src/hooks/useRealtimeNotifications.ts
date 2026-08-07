@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { notify, ORDER_STATUS_MESSAGE, SERVICE_STATUS_MESSAGE } from "@/lib/notifications";
+import { notify, ORDER_STATUS_MESSAGE } from "@/lib/notifications";
 
 /**
  * Assina em tempo real os pedidos e ordens de serviço do cliente logado e
@@ -54,20 +54,6 @@ export function useRealtimeNotifications() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders", filter: `user_id=eq.${userId}` },
         () => push("Pedido criado", "Recebemos seu pedido com sucesso.", "/meus-pedidos"),
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "service_orders", filter: `user_id=eq.${userId}` },
-        (payload) => {
-          const next = payload.new as { id: string; status?: string };
-          const prev = payload.old as { status?: string };
-          if (!next.status || next.status === prev?.status) return;
-          push(
-            "Assistência técnica",
-            SERVICE_STATUS_MESSAGE[next.status] ?? `Status atualizado: ${next.status}`,
-            `/garantia/${next.id}`,
-          );
-        },
       )
       .subscribe();
 
