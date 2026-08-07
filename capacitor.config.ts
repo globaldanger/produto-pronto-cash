@@ -10,13 +10,27 @@ const config: CapacitorConfig = {
   server: {
     url: "https://www.smartcel.store",
     cleartext: false,
+    androidScheme: "https",
+    iosScheme: "https",
+    // Domínios permitidos dentro do app (checkout do Mercado Pago e backend).
+    allowNavigation: [
+      "www.smartcel.store",
+      "smartcel.store",
+      "*.mercadopago.com",
+      "*.mercadopago.com.br",
+      "*.mercadolibre.com",
+      "*.supabase.co",
+    ],
   },
   android: {
     backgroundColor: "#000000",
+    allowMixedContent: false,
+    webContentsDebuggingEnabled: false,
   },
   ios: {
     backgroundColor: "#000000",
     contentInset: "always",
+    limitsNavigationsToAppBoundDomains: false,
   },
 };
 
