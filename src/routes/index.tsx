@@ -7,6 +7,7 @@ import { useCart } from "@/stores/cart";
 import { StoreHeader } from "@/components/StoreHeader";
 import { CartDrawer } from "@/components/CartDrawer";
 import { useActiveTheme, ThemeDecorationLayer } from "@/lib/theme";
+import { MobileTabBar } from "@/components/MobileTabBar";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -464,11 +465,12 @@ function Index() {
           target="_blank"
           rel="noreferrer"
           aria-label="Falar com a loja no WhatsApp"
-          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-2xl text-white shadow-xl transition hover:brightness-110"
+          className="fixed bottom-24 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-green-600 text-2xl text-white shadow-xl transition hover:brightness-110 md:bottom-5"
         >
           <i className="fa-brands fa-whatsapp" />
         </a>
       )}
+      <MobileTabBar />
     </div>
   );
 }
