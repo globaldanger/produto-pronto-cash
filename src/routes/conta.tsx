@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { StoreHeader } from "@/components/StoreHeader";
 import { CartDrawer } from "@/components/CartDrawer";
 import { NotificationOptIn } from "@/components/NotificationOptIn";
+import { MobileTabBar } from "@/components/MobileTabBar";
 
 export const Route = createFileRoute("/conta")({
   head: () => ({ meta: [{ title: "Minha conta — SmartCell" }] }),
@@ -125,6 +126,7 @@ function AccountPage() {
         </div>
       </main>
       <CartDrawer />
+      <MobileTabBar />
     </div>
   );
 }
